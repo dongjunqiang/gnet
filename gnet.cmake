@@ -53,12 +53,12 @@ add_library(gnet ${GNET_SOURCE})
 # 安装到发布目录(todo)
 install(
     DIRECTORY ${GNET_DIR_CONF}
-    DESTINATION "${GNET_DIR_RELEASE}/conf"
+    DESTINATION "${GNET_DIR_RELEASE}"
     USE_SOURCE_PERMISSIONS
     FILES_MATCHING PATTERN "*.conf" 
 )
 install(
-    TARGETS ${GNET_LIB}
+    TARGETS gnet 
     DESTINATION "${GNET_DIR_RELEASE}/lib"
 )
 

@@ -4,18 +4,18 @@ include("${CMAKE_SOURCE_DIR}/common.cmake")
 set(MAJOR_VERSION 0)
 set(MINOR_VERSION 1)
 
-# 包含头文件
-include_directories("${CMAKE_SOURCE_DIR}")
-
 # 目录
 set(GNET_DIR_3RD "${CMAKE_SOURCE_DIR}/3rd")
 set(GNET_DIR_PROTO "${CMAKE_SOURCE_DIR}/proto")
 set(GNET_DIR_CONF "${CMAKE_SOURCE_DIR}/conf")
 set(GNET_DIR_SERVICE "${CMAKE_SOURCE_DIR}/service")
 
+# 包含头文件
+set(GNET_DIR_3RD_INCLUDE "${GNET_DIR_3RD}/include")
+include_directories("${CMAKE_SOURCE_DIR}" ${GNET_DIR_3RD_INCLUDE})
+
 # 链接(gbase依赖curl和openssl, 需要时再加)
-set(GNET_DIR_3RD_PROTOBUF_LIB "${GNET_DIR_3RD}/protobuf/lib64")
-set(GNET_DIR_3RD_GBASE_LIB "${GNET_DIR_3RD}/gbase/lib")
+set(GNET_DIR_3RD_LIB "${GNET_DIR_3RD}/lib")
 set(GNET_LIB_LINK "${COMMON_LINK_LIN}" gbase protobuf)
 
 # 发布目录

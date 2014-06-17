@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <string>
 
-#include <gbase/include/logic/bus.h>
-#include <gbase/include/base/timer.h>
+#include <gbase/logic/bus.h>
+#include <gbase/base/timer.h>
 
 #include "conf/conf.pb.h"
 #include "service/sid.h"

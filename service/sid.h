@@ -1,7 +1,7 @@
 #ifndef GNET_SID_H_
 #define GNET_SID_H_
 
-#include <gbase/include/logic/bus.h>
+#include <gbase/logic/bus.h>
 
 // int64_t sid
 //

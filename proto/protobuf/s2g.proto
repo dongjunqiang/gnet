@@ -16,7 +16,7 @@ enum EN_CMD_S2G
 
 message MS2G_REG_REQ
 {
-    required int64 id = 1;
+    required int64 sid = 1;
 }
 
 message MG2S_REG_RES

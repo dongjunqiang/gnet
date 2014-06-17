@@ -8,6 +8,6 @@ message MSyncOp
 
 message MSync
 {
-    required int64 id = 1;
+    required int64 sid = 1;
     required MSyncOp op = 2;
 }

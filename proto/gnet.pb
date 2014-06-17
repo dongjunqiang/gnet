@@ -1,20 +1,18 @@
 
-g
+h
 
 comm.protoGNET"#
 MSyncOp
 add (
-del (".
-MSync
-
-id (
+del ("/
+MSync
+sid (
 op (2.GNET.MSyncOp
-›
+œ
 	g2r.protoGNET
-comm.proto"
-MG2R_REG_REQ
-
-id ("
+comm.proto"
+MG2R_REG_REQ
+sid ("
 MR2G_REG_RES
 result ("7
 MG2R_SYNC_REQ
@@ -48,12 +46,11 @@ EN_CMD_G2R
 CMD_G2R_SYNC_RES
 CMD_G2R_PING
 CMD_R2G_PONG
-À
+Á
 	s2g.protoGNET
-comm.proto"
-MS2G_REG_REQ
-
-id ("
+comm.proto"
+MS2G_REG_REQ
+sid ("
 MG2S_REG_RES
 result ("7
 MG2S_SYNC_REQ

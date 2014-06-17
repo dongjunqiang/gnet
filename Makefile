@@ -1,3 +1,0 @@
-.PHONY: proto
-
-proto: protoc 

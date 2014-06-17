@@ -19,7 +19,7 @@ enum EN_CMD_G2R
 
 message MG2R_REG_REQ
 {
-    required int64 id = 1;
+    required int64 sid = 1;
 }
 
 message MR2G_REG_RES

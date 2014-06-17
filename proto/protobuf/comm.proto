@@ -1,0 +1,13 @@
+package GNET;
+
+message MSyncOp
+{
+    optional int32 add = 1;
+    optional int32 del = 2;
+}
+
+message MSync
+{
+    required int64 id = 1;
+    required MSyncOp op = 2;
+}

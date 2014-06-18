@@ -5,7 +5,6 @@ enum SERVICE_TYPE
     ST_RESERVED = 0;
 
     ST_GW = 1;
-    ST_ROUTER = 2;
 }
 
 message CONF_GLOBAL
@@ -17,11 +16,7 @@ message CONF_GLOBAL
 message CONF_GW
 {
     required string listen_addr = 1;
-}
-
-message CONF_ROUTER
-{
-    required string listen_addr = 2;
+    repeated string children = 2;
 }
 
 message CONF_SERVICE
@@ -32,7 +27,6 @@ message CONF_SERVICE
     required int32 instance = 4;
 
     optional CONF_GW gw = 11;
-    optional CONF_ROUTER router = 12;
 }
 
 message CONF

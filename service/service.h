@@ -13,27 +13,32 @@
 class Service
 {
 public:
-    Service(const std::string& cfgfile, const std::string& name);
+    Service(const std::string& name,
+            const std::string& cfgfile = "../conf/gnet.conf");
     virtual ~Service();
 
-    int reload();
+    int Reload();
 
-    int poll(int ms);
-    int send();
-    int recv();
+    int Poll(int ms);
+    int Send();
+    int Recv();
 
-    sid_t sid() const { return sid; }
-    void set_sid(sid_t id) { sid = id; }
+    sid_t sid() const { return sid_; }
+    void set_sid(sid_t id) { sid_ = id; }
 
-    const GNET::CONF& conf() const { return cfg; }
+    const GNET::CONF_SERVICE& cfg_service() const { return cfg_service_; }
+    const GNET::CONF_GLOBAL& cfg_global() const { return cfg_global_; }
 
 private:
-    std::string cfgfile;
-    GNET::CONF cfg;
-    sid_t sid;
+    std::string name_;
 
-    struct bus_t* bus;
-    struct timerheap_t* timer;
+    std::string cfgfile_;
+    GNET::CONF_SERVICE cfg_service_;
+    GNET::CONF_GLOBAL cfg_global_;
+    sid_t sid_;
+
+    struct bus_t* bus_;
+    struct timerheap_t* timer_;
 };
 
 #endif

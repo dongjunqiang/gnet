@@ -2,39 +2,41 @@ package GNET;
 
 enum SERVICE_TYPE
 {
+    ST_RESERVED = 0;
+
     ST_GW = 1;
     ST_ROUTER = 2;
 }
 
-message GLOBAL
+message CONF_GLOBAL
 {
     required int32 world = 1;
     required int32 buskey = 2;
 }
 
-message SERVICE_GW
+message CONF_GW
 {
     required string listen_addr = 1;
 }
 
-message SERVICE_ROUTER
+message CONF_ROUTER
 {
     required string listen_addr = 2;
 }
 
-message SERVICE
+message CONF_SERVICE
 {
     required string name = 1;
     required SERVICE_TYPE type = 2;
     required int32 machine = 3;
     required int32 instance = 4;
 
-    optional SERVICE_GW gw = 11;
-    optional SERVICE_ROUTER router = 12;
+    optional CONF_GW gw = 11;
+    optional CONF_ROUTER router = 12;
 }
 
 message CONF
 {
-    required GLOBAL global = 1;
-    repeated SERVICE service = 2; 
+    required CONF_GLOBAL global = 1;
+    repeated CONF_SERVICE service = 2;
 }

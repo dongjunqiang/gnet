@@ -1,0 +1,10 @@
+package GNET;
+
+enum ERR_CODE
+{
+    SUCCESS = 0;
+
+    ERR_FILE_NOT_EXIST = -101;
+    ERR_CFG_FILE_PARSE = -102;
+    ERR_CFG_ID_EXCEED_LIMIT = -103;
+}

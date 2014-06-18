@@ -54,8 +54,10 @@ int BaseSvc::Reload()
         return ret;
     }
 
+    // TODO: change sid would be support later
+    sid_t backup = sid_;
     sid_ = conf_->GetSidByName(name_);
-    assert(sid_ != SID_RESERVED);
+    assert(sid_ == backup);
 
     return ReloadImpl();
 }

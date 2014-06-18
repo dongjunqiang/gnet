@@ -10,12 +10,12 @@
 // -----------------------------------------------------
 // |            |            |    type    |  instance  |
 // |  world id  | machine id |--------------------------
-// |            |            |      bus address        |
+// |            |            |  bus address (reserved) |
 // -----------------------------------------------------
 
 typedef int64_t sid_t;
 
-#define SID_BUS_ADDR(sid)   ((sid << 32) >> 32)
+// #define SID_BUS_ADDR(sid)   ((sid << 32) >> 32)
 
 #define SID_WORLD(sid)      (sid >> 48)
 #define SID_MACHINE(sid)    ((sid << 16) >> 48)

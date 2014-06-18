@@ -21,17 +21,19 @@ public:
     Conf() {}
     ~Conf() {}
 
+    int Init(const std::string& file);
     int Reload(const std::string& file);
-
-    const GNET::CONF_GLOBAL* Global() const { return &cfg_.global(); }
 
     const GNET::CONF_SERVICE* GetServiceByName(const std::string& name) const;
     const GNET::CONF_SERVICE* GetServiceBySid(sid_t) const;
 
     sid_t GetSidByName(const std::string& name) const;
+    sid_t GetMasterSid() const { return master_sid_; }
 
 private:
     GNET::CONF cfg_;
+
+    sid_t master_sid_;
     SID_MAP_T sids_;
     NAME_MAP_T names_;
     GW_TREE_T gws_;

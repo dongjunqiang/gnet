@@ -2,5 +2,9 @@
 
 BIN=../3rd/bin/protoc
 
-rm ./*.pb.h ./*.pb.cc
+if [ -f "./*.pb.*" ]
+then
+    rm ./*.pb.*
+fi
+
 $BIN --cpp_out=./ ./*.proto

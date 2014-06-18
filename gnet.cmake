@@ -9,6 +9,7 @@ set(GNET_DIR_3RD "${CMAKE_SOURCE_DIR}/3rd")
 set(GNET_DIR_PROTO "${CMAKE_SOURCE_DIR}/proto")
 set(GNET_DIR_CONF "${CMAKE_SOURCE_DIR}/conf")
 set(GNET_DIR_SERVICE "${CMAKE_SOURCE_DIR}/service")
+set(GNET_DIR_GW "${CMAKE_SOURCE_DIR}/gw")
 
 # 包含头文件
 set(GNET_DIR_3RD_INCLUDE "${GNET_DIR_3RD}/include")
@@ -22,8 +23,8 @@ include_directories(
 )
 
 # 链接(gbase依赖curl和openssl, 需要时再加)
-set(GNET_DIR_3RD_LIB "${GNET_DIR_3RD}/lib")
 set(GNET_LIB_LINK "${COMMON_LINK_LIN}" gbase protobuf)
+link_directories("${GNET_DIR_3RD}/lib")
 
 # 发布目录
 string(TIMESTAMP TS "%y%m%d")
@@ -46,26 +47,36 @@ execute_process(
 )
 message("gnet conf protoc convert complete.")
 
-# 编译lib的源文件
-aux_source_directory(${GNET_DIR_PROTO} GNET_SOURCE)
-aux_source_directory(${GNET_DIR_CONF} GNET_SOURCE)
-aux_source_directory(${GNET_DIR_SERVICE} GNET_SOURCE)
-foreach(GNET_SOURCE_FILE ${GNET_SOURCE})
-    CommonEcho(COLOR CYAN "===> source: ${GNET_SOURCE_FILE}")
-endforeach()
-
 # 编译lib
-add_library(gnet ${GNET_SOURCE})
+aux_source_directory(${GNET_DIR_PROTO} GNET_LIB_SOURCE)
+aux_source_directory(${GNET_DIR_CONF} GNET_LIB_SOURCE)
+aux_source_directory(${GNET_DIR_SERVICE} GNET_LIB_SOURCE)
+foreach(GNET_LIB_SOURCE_FILE ${GNET_LIB_SOURCE})
+    CommonEcho(COLOR CYAN "===> lib source: ${GNET_LIB_SOURCE_FILE}")
+endforeach()
+add_library(gnet ${GNET_LIB_SOURCE})
+
+# 编译gw
+aux_source_directory(${GNET_DIR_GW} GNET_GW_SOURCE)
+foreach(GNET_GW_SOURCE_FILE ${GNET_GW_SOURCE})
+    CommonEcho(COLOR GREEN "===> gw source: ${GNET_GW_SOURCE_FILE}")
+endforeach()
+add_executable(gw ${GNET_GW_SOURCE})
+target_link_libraries(gw gnet ${GNET_LIB_LINK})
 
 # 安装到发布目录(todo)
 install(
     DIRECTORY ${GNET_DIR_CONF}
     DESTINATION "${GNET_DIR_RELEASE}"
     USE_SOURCE_PERMISSIONS
-    FILES_MATCHING PATTERN "*.conf" 
+    FILES_MATCHING PATTERN "*.conf"
 )
 install(
-    TARGETS gnet 
+    TARGETS gnet
     DESTINATION "${GNET_DIR_RELEASE}/lib"
+)
+install(
+    TARGETS gw
+    DESTINATION "${GNET_DIR_RELEASE}/bin"
 )
 

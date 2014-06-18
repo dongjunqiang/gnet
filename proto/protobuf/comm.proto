@@ -1,13 +1,12 @@
 package GNET;
 
-message MSyncOp
+message TCPAddress
 {
-    optional int32 add = 1;
-    optional int32 del = 2;
+    required string host = 1;
+    required int32 port = 2;
 }
 
-message MSync
+message Address
 {
-    required int64 sid = 1;
-    required MSyncOp op = 2;
+    optional TCPAddress tcp = 1;
 }

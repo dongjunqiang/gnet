@@ -3,10 +3,17 @@
 
 #include "service/conf.h"
 
+int Conf::Init(const std::string& file)
+{
+    return Reload(file);
+}
+
 int Conf::Reload(const std::string& file)
 {
     int fd = open(file.c_str(), O_RDONLY);
-    return GNET::ERR_FILE_NOT_EXIST;
+    if (fd < 0) {
+        return GNET::ERR_FILE_NOT_EXIST;
+    }
 
     google::protobuf::io::FileInputStream fi(fd);
     fi.SetCloseOnDelete(true);
@@ -17,14 +24,13 @@ int Conf::Reload(const std::string& file)
     }
 
     // check global
-    if (cfg_.global().buskey() > 0xFFFF
-        || cfg_.global().world() > 0xFFFFF) {
+    if (cfg_.world() > 0xFFFFF) {
         return GNET::ERR_CFG_ID_EXCEED_LIMIT;
     }
 
-    // build sid & name index
     sids_.clear();
     names_.clear();
+
     for (int i = 0; i < cfg_.service_size(); ++ i) {
         // check service
         if (cfg_.service(i).machine() > 0xFFFF
@@ -32,7 +38,9 @@ int Conf::Reload(const std::string& file)
             return GNET::ERR_CFG_ID_EXCEED_LIMIT;
         }
 
-        sid_t sid = SID(cfg_.global().world(),
+        // sid <--> cfg mapping
+        // name <--> sid mapping
+        sid_t sid = SID(cfg_.world(),
             cfg_.service(i).machine(),
             cfg_.service(i).type(),
             cfg_.service(i).instance());
@@ -40,8 +48,13 @@ int Conf::Reload(const std::string& file)
         names_[cfg_.service(i).name()] = sid;
     }
 
-    // build gw index
     for (int i = 0; i < cfg_.service_size(); ++ i) {
+        // master sid
+        if (cfg_.service(i).type() == GNET::ST_MASTER) {
+            master_sid_ = names_[cfg_.service(i).name()];
+        }
+
+        // gw tree mapping
         if (cfg_.service(i).type() == GNET::ST_GW) {
             const GNET::CONF_GW& gw = cfg_.service(i).gw();
             for (int j = 0; j < gw.children_size(); ++ j) {

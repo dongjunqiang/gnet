@@ -3,8 +3,7 @@
 
 #include <string>
 
-#include "proto/comm.pb.h"
-#include "proto/errcode.pb.h"
+#include "proto/gnet.pb.h"
 
 int ParseAddress(const std::string& addr_cfg, GNET::Address& addr);
 

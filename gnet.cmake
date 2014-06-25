@@ -7,8 +7,7 @@ set(MINOR_VERSION 1)
 # 目录
 set(GNET_DIR_3RD "${CMAKE_SOURCE_DIR}/3rd")
 set(GNET_DIR_PROTO "${CMAKE_SOURCE_DIR}/proto")
-set(GNET_DIR_CONF "${CMAKE_SOURCE_DIR}/conf")
-set(GNET_DIR_SERVICE "${CMAKE_SOURCE_DIR}/service")
+set(GNET_DIR_SRC "${CMAKE_SOURCE_DIR}/src")
 set(GNET_DIR_GW "${CMAKE_SOURCE_DIR}/gw")
 
 # 包含头文件
@@ -40,33 +39,17 @@ execute_process(
 )
 message("gnet proto protoc convert complete.")
 
-# 转换conf
-execute_process(
-    COMMAND sh gen.sh
-    WORKING_DIRECTORY ${GNET_DIR_CONF}
-)
-message("gnet conf protoc convert complete.")
-
 # 编译lib
 aux_source_directory(${GNET_DIR_PROTO} GNET_LIB_SOURCE)
-aux_source_directory(${GNET_DIR_CONF} GNET_LIB_SOURCE)
-aux_source_directory(${GNET_DIR_SERVICE} GNET_LIB_SOURCE)
+aux_source_directory(${GNET_DIR_SRC} GNET_LIB_SOURCE)
 foreach(GNET_LIB_SOURCE_FILE ${GNET_LIB_SOURCE})
     CommonEcho(COLOR CYAN "===> lib source: ${GNET_LIB_SOURCE_FILE}")
 endforeach()
 add_library(gnet ${GNET_LIB_SOURCE})
 
-# 编译gw
-aux_source_directory(${GNET_DIR_GW} GNET_GW_SOURCE)
-foreach(GNET_GW_SOURCE_FILE ${GNET_GW_SOURCE})
-    CommonEcho(COLOR GREEN "===> gw source: ${GNET_GW_SOURCE_FILE}")
-endforeach()
-add_executable(gw ${GNET_GW_SOURCE})
-target_link_libraries(gw gnet ${GNET_LIB_LINK})
-
 # 安装到发布目录(todo)
 install(
-    DIRECTORY ${GNET_DIR_CONF}
+    DIRECTORY ${GNET_DIR_PROTO}
     DESTINATION "${GNET_DIR_RELEASE}"
     USE_SOURCE_PERMISSIONS
     FILES_MATCHING PATTERN "*.conf"
@@ -74,9 +57,5 @@ install(
 install(
     TARGETS gnet
     DESTINATION "${GNET_DIR_RELEASE}/lib"
-)
-install(
-    TARGETS gw
-    DESTINATION "${GNET_DIR_RELEASE}/bin"
 )
 

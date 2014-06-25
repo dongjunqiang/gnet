@@ -1,0 +1,62 @@
+package GNET;
+
+enum ERR_CODE
+{
+    SUCCESS = 0;
+    BUSY = 1;
+
+    ERR_ADDRESS_INVALID = -101;
+    ERR_ADDRESS_NOT_SUPPORT = -102;
+
+    ERR_CFG_NOT_EXIST = -201;
+    ERR_CFG_PARSE = -202,
+}
+
+// 服务节点
+message NODE
+{
+    required string name = 1;
+    repeated string children = 2;
+    required string address = 3;
+}
+
+// 路由表
+message TABLE
+{
+    optional string desc = 1;
+    repeated NODE node = 2;
+}
+
+// tcp地址封装
+message TCPAddress
+{
+    required string host = 1;
+    required int32 port = 2;
+}
+
+// 节点地址封装
+message Address
+{
+    optional TCPAddress tcp = 1;
+}
+
+// 数据包
+message PKGData
+{
+    required string src = 1;
+    optional string dst = 2;    // 不存在表示广播
+    required bytes data = 3;
+}
+
+// 路由包
+message PKGRoute
+{
+    optional TABLE table = 1;
+}
+
+// 通信包
+message PKG
+{
+    optional PKGData data = 1;
+    optional PKGRoute route = 2;
+}

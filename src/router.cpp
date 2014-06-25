@@ -1,35 +1,30 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-#include "service/conf.h"
+#include "src/router.h"
 
-int Conf::Init(const std::string& file)
+int Router::Init(const std::string& file)
 {
     return Reload(file);
 }
 
-int Conf::Reload(const std::string& file)
+int Router::Reload(const std::string& file)
 {
     int fd = open(file.c_str(), O_RDONLY);
     if (fd < 0) {
-        return GNET::ERR_FILE_NOT_EXIST;
+        return GNET::ERR_CFG_NOT_EXIST;
     }
 
     google::protobuf::io::FileInputStream fi(fd);
     fi.SetCloseOnDelete(true);
 
-    cfg_.Clear();
-    if (!google::protobuf::TextFormat::Parse(&fi, &cfg_)) {
-        return GNET::ERR_CFG_FILE_PARSE;
+    table_.Clear();
+    if (!google::protobuf::TextFormat::Parse(&fi, &table_)) {
+        return GNET::ERR_CFG_PARSE;
     }
 
-    // check global
-    if (cfg_.world() > 0xFFFFF) {
-        return GNET::ERR_CFG_ID_EXCEED_LIMIT;
-    }
-
-    sids_.clear();
-    names_.clear();
+    nodes_map_.clear();
+    nodes_tree_.clear();
 
     for (int i = 0; i < cfg_.service_size(); ++ i) {
         // check service

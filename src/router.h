@@ -9,10 +9,13 @@
 
 #include "proto/gnet.pb.h"
 
+// 路由表
 class Router
 {
-    typedef std::map<std::string, const GNET::NODE*> MAP_T;
-    typedef std::multimap<std::string, std::string> TREE_T;
+    // name <--> node
+    typedef std::map<std::string, const GNET::NODE*> NODE_MAP_T;
+    // node <--> node's parent
+    typedef std::map<const GNET::NODE*, const GNET::NODE*> PARENT_MAP_T;
 
 public:
     Router() {}
@@ -22,12 +25,16 @@ public:
     int Reload(const std::string& file);
 
     const GNET::NODE* GetNodeByName(const std::string& name) const;
-    const GNET::NODE* GetRootNode() const;
+    const GNET::NODE* GetParentNode(const GNET::NODE*) const;
+    const GNET::NODE* GetRootNode() const { return &root_; }
 
 private:
-    GNET::TABLE table_;
-    MAP_T nodes_map_;
-    TREE_T nodes_tree_;
+    void do_mapping(const GNET::NODE*);
+
+private:
+    GNET::NODE root_;
+    NODE_MAP_T nodes_map_;
+    PARENT_MAP_T parents_map_;
 };
 
 #endif

@@ -30,7 +30,7 @@ string(TIMESTAMP TS "%y%m%d")
 set(GNET_DIR_RELEASE "${CMAKE_SOURCE_DIR}/release-${MAJOR_VERSION}.${MINOR_VERSION}.${TS}")
 
 # 编译选项
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++11")
 
 # 转换protocol
 execute_process(

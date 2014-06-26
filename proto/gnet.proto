@@ -9,22 +9,26 @@ enum ERR_CODE
     ERR_ADDRESS_NOT_SUPPORT = -102;
 
     ERR_CFG_NOT_EXIST = -201;
-    ERR_CFG_PARSE = -202,
+    ERR_CFG_PARSE = -202;
+
+    ERR_GATE_NOT_FOUND = -301;
+    ERR_GATE_CANT_CONNECT = -302;
+    ERR_GATE_CANT_START_LINK = -303;
 }
 
 // 服务节点
 message NODE
 {
     required string name = 1;
-    repeated string children = 2;
-    required string address = 3;
+    required string address = 2;
+    repeated NODE children = 3;
 }
 
 // 路由表
 message TABLE
 {
     optional string desc = 1;
-    repeated NODE node = 2;
+    required NODE root = 2;
 }
 
 // tcp地址封装

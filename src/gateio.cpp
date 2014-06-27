@@ -16,13 +16,20 @@ GateIO::~GateIO()
     for (SOCK_MAP_T::iterator it = sock_map_.begin(); it != sock_map_.end(); ++ it) {
         CON_MAP_T::iterator it2 = con_map_.find(it->second);
         if (it2 != con_map_.end()) {
-            connector_t* con = it2->second;
-            connector_stop(con);
+            Connection* con = it2->second;
+            if (con && con->con) {
+                connector_stop(con->con);
+            }
         }
     }
     for (CON_MAP_T::iterator it = con_map_.begin(); it != con_map_.end(); ++ it) {
-        connector_t* con = it->second;
-        connector_release(con);
+        Connection* con = it->second;
+        if (con) {
+            if (con->con) {
+                connector_release(con->con);
+            }
+            delete con;
+        }
         it->second = NULL;
     }
     con_map_.clear();
@@ -37,7 +44,7 @@ GateIO::~GateIO()
     SOCK_RELEASE();
 }
 
-int GateIO::BuildLink(GNET::NODE* node)
+int GateIO::StartLink(const std::string& name, const std::string& address)
 {
     if (!reactor_) {
         reactor_ = reactor_create();
@@ -45,26 +52,31 @@ int GateIO::BuildLink(GNET::NODE* node)
     }
 
     int ret;
-    CON_MAP_T::iterator it = con_map_.find(node->name());
+    CON_MAP_T::iterator it = con_map_.find(name);
     if (it == con_map_.end()) {
 
         // new connection
         connector_t* con = connector_create(reactor_);
         assert(con);
         connector_set_read_func(con, GateIO::on_read, this);
-        connector_set_close_func(con, GateIO::on_close, this);
+        connector_set_close_func(con, GateIO::on_discon, this);
+
+        Connection* connection = new Connection;
+        connection->con = con;
+        connection->frecv = NULL;
+        connection->fdiscon = NULL;
 
         // add index
-        con_map_.insert(std::make_pair(node->name(), con));
-        it = con_map_.find(node->name());
+        con_map_.insert(std::make_pair(name, connection));
+        it = con_map_.find(name);
     }
 
-    connector_t* con = it->second;
-    if (connector_fd(con) == INVALID_SOCK) {
+    Connection* con = it->second;
+    if (connector_fd(con->con) == INVALID_SOCK) {
 
         // parse address
         GNET::Address addr;
-        ret = ParseAddress(node->address(), addr);
+        ret = ParseAddress(address, addr);
         assert(ret == GNET::SUCCESS);
 
         // connect
@@ -74,17 +86,37 @@ int GateIO::BuildLink(GNET::NODE* node)
         if (ret < 0) {
             return GNET::ERR_GATE_CANT_CONNECT;
         }
-        connector_set_fd(con, sock);
+        connector_set_fd(con->con, sock);
 
         // start connector
-        ret = connector_start(con);
+        ret = connector_start(con->con);
         if (ret < 0) {
             return GNET::ERR_GATE_CANT_START_LINK;
         }
- 
+
         // add index
-        sock_map_.insert(std::make_pair(sock, node->name()));
-   }
+        sock_map_.insert(std::make_pair(sock, name));
+    }
+
+    return GNET::SUCCESS;
+}
+
+int GateIO::StopLink(const std::string& name)
+{
+    Connection* con = get_connection(name);
+    if (!con)
+        return GNET::ERR_GATE_LINK_NOT_FOUND;
+
+    if (con->con) {
+        sock_t fd = connector_fd(con->con);
+        if (fd != INVALID_SOCK) {
+            sock_map_.erase(fd);
+        }
+        connector_stop(con->con);
+        connector_release(con->con);
+    }
+    delete con;
+    con_map_.erase(name);
 
     return GNET::SUCCESS;
 }
@@ -96,12 +128,69 @@ int GateIO::Poll(int ms)
     return GNET::SUCCESS;
 }
 
-int GateIO::on_read(sock_t fd, void* arg, const char* buffer, int len)
+void GateIO::RegRecvFunc(const std::string& name, RECV_FUNC_T frecv)
 {
-    return -1;
+    CON_MAP_T::iterator it = con_map_.find(name);
+    if (it != con_map_.end()) {
+        Connection* con = it->second;
+        if (con)
+            con->frecv = frecv;
+    }
 }
 
-void GateIO::on_close(sock_t fd, void* arg)
+void GateIO::RegDisconFunc(const std::string& name, DISCON_FUNC_T fdiscon)
 {
+    CON_MAP_T::iterator it = con_map_.find(name);
+    if (it != con_map_.end()) {
+        Connection* con = it->second;
+        if (con)
+            con->fdiscon = fdiscon;
+    }
+}
+
+int GateIO::on_read(sock_t fd, void* arg, const char* buffer, int len)
+{
+    GateIO* io = static_cast<GateIO*>(arg);
+    if (io) {
+        io->on_read_impl(fd, buffer, len);
+    }
+    // 自动排干
+    return len;
+}
+
+void GateIO::on_discon(sock_t fd, void* arg)
+{
+    GateIO* io = static_cast<GateIO*>(arg);
+    if (io) {
+        io->on_discon_impl(fd);
+    }
+}
+
+void GateIO::on_read_impl(sock_t fd, const char* buffer, int len)
+{
+    Connection* con = get_connection(fd);
+    if (con && con->frecv) {
+        con->frecv(buffer, len);
+    }
+}
+
+void GateIO::on_discon_impl(sock_t fd)
+{
+    Connection* con = get_connection(fd);
+    if (con && con->fdiscon) {
+        con->fdiscon();
+    }
+}
+
+GateIO::Connection* GateIO::get_connection(const std::string& name) const
+{
+    CON_MAP_T::const_iterator it = con_map_.find(name);
+    return it == con_map_.end() ? NULL : it->second;
+}
+
+GateIO::Connection* GateIO::get_connection(sock_t fd) const
+{
+    SOCK_MAP_T::const_iterator it = sock_map_.find(fd);
+    return it == sock_map_.end() ? NULL : get_connection(it->second);
 }
 

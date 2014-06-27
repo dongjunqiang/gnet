@@ -18,6 +18,9 @@ enum ERR_CODE
     ERR_GATE_LINK_NOT_FOUND = -304;
     ERR_GATE_PKG_TOO_BIG = -305;
     ERR_GATE_SEND_FAIL = -306;
+    ERR_GATE_START_FAIL = -307;
+    ERR_GATE_LINK_EXIST = -308;
+    ERR_GATE_STARTED = -309;
 }
 
 // 服务节点
@@ -48,7 +51,24 @@ message Address
     optional TCPAddress tcp = 1;
 }
 
-// 数据包
+enum PKGCmd {
+    CMD_DATA = 1;
+    CMD_SYN = 2;
+    CMD_ACK = 3;
+    CMD_ROUTE = 4;
+}
+
+message PKGSyn
+{
+    required string name = 1;
+}
+message PKGRoute
+{
+    optional TABLE table = 1;
+}
+message PKGAck
+{
+}
 message PKGData
 {
     required string src = 1;
@@ -56,15 +76,12 @@ message PKGData
     required bytes data = 3;
 }
 
-// 路由包
-message PKGRoute
-{
-    optional TABLE table = 1;
-}
-
-// 通信包
 message PKG
 {
-    optional PKGData data = 1;
-    optional PKGRoute route = 2;
+    required PKGCmd cmd = 1;
+    optional PKGData data = 2;
+    optional PKGSyn syn = 3;
+    optional PKGAck ack = 4;
+    optional PKGRoute route = 5;
 }
+

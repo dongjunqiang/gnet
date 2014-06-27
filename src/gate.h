@@ -5,24 +5,26 @@
 #include <string>
 
 #include "src/router.h"
+#include "src/gateio.h"
 
-struct Gate
+struct Gate : public GateBase
 {
 public:
     Gate();
     virtual ~Gate();
 
     int Init(const std::string& name, const std::string& file);
-    int Reload(const std::string& name, const std::string& file);
 
     int Poll();
 
-private:
-    int reg_to_parent();
+    virtual void OnData(const std::string&, const GNET::PKGData&);
+    virtual void OnDiscon(const std::string&);
+    virtual void OnBuild(const std::string&);
 
 private:
     std::string name_;
     Router* router_;
+    GateIO* io_;
 };
 
 #endif

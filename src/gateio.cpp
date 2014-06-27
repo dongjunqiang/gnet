@@ -121,6 +121,29 @@ int GateIO::StopLink(const std::string& name)
     return GNET::SUCCESS;
 }
 
+int GateIO::SendPkgToLink(const std::string& name, const GNET::PKG& pkg)
+{
+    Connection* con = get_connection(name);
+    if (!con)
+        return GNET::ERR_GATE_LINK_NOT_FOUND;
+
+    static ::google::protobuf::uint8 buffer[64 * 1024];
+    int size = (int)sizeof(buffer);
+    int head_size = (int)sizeof(IOPkg::IOHead);
+    int body_size = pkg.ByteSize();
+
+    if (head_size + body_size > size)
+        return GNET::ERR_GATE_PKG_TOO_BIG;
+
+    IOPkg::IOHead head;
+    head.size = size;
+    memcpy(buffer, &head, head_size);
+    pkg.SerializeWithCachedSizesToArray(buffer + head_size);
+
+    int ret = connector_send(con->con, (char*)buffer, head_size + body_size);
+    return ret ? GNET::ERR_GATE_SEND_FAIL : GNET::SUCCESS;
+}
+
 int GateIO::Poll(int ms)
 {
     int ret = reactor_dispatch(reactor_, 10);
@@ -151,11 +174,29 @@ void GateIO::RegDisconFunc(const std::string& name, DISCON_FUNC_T fdiscon)
 int GateIO::on_read(sock_t fd, void* arg, const char* buffer, int len)
 {
     GateIO* io = static_cast<GateIO*>(arg);
+    int shift = 0;
     if (io) {
-        io->on_read_impl(fd, buffer, len);
+        static IOPkg iopkg;
+        int head_size = (int)sizeof(iopkg.head);
+        while (len > head_size) {
+
+            // head
+            memcpy(&iopkg.head, buffer, head_size);
+            iopkg.pkg.Clear();
+            len -= head_size;
+
+            // body
+            if (len > iopkg.head.size) {
+                shift += head_size;
+                if (iopkg.pkg.ParseFromArray(buffer + shift, iopkg.head.size)) {
+                    io->on_read_impl(fd, iopkg.pkg);
+                }
+                len -= iopkg.head.size;
+                shift += iopkg.head.size;
+            }
+        }
     }
-    // 自动排干
-    return len;
+    return shift;
 }
 
 void GateIO::on_discon(sock_t fd, void* arg)
@@ -166,11 +207,11 @@ void GateIO::on_discon(sock_t fd, void* arg)
     }
 }
 
-void GateIO::on_read_impl(sock_t fd, const char* buffer, int len)
+void GateIO::on_read_impl(sock_t fd, GNET::PKG& pkg)
 {
     Connection* con = get_connection(fd);
     if (con && con->frecv) {
-        con->frecv(buffer, len);
+        con->frecv(pkg);
     }
 }
 

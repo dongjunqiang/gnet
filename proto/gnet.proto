@@ -1,4 +1,4 @@
-package GNET;
+package gnet.proto;
 
 enum ERR_CODE
 {

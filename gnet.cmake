@@ -12,17 +12,15 @@ set(GNET_DIR_GW "${CMAKE_SOURCE_DIR}/gw")
 
 # 包含头文件
 set(GNET_DIR_3RD_INCLUDE "${GNET_DIR_3RD}/include")
-set(GNET_DIR_3RD_GBASE_INCLUDE "${GNET_DIR_3RD_INCLUDE}/gbase")
 set(GNET_DIR_3RD_PROTOBUF_INCLUDE "${GNET_DIR_3RD_INCLUDE}/google/protobuf")
 include_directories(
     ${CMAKE_SOURCE_DIR}
     ${GNET_DIR_3RD_INCLUDE}
-    ${GNET_DIR_3RD_GBASE_INCLUDE}
     ${GNET_DIR_3RD_PROTOBUF_INCLUDE}
 )
 
 # 链接(gbase依赖curl和openssl, 需要时再加)
-set(GNET_LIB_LINK "${COMMON_LINK_LIN}" gbase protobuf)
+set(GNET_LIB_LINK "${COMMON_LINK_LIN}" protobuf)
 link_directories("${GNET_DIR_3RD}/lib")
 
 # 发布目录

@@ -4,18 +4,16 @@
 #include <map>
 #include <string>
 
-#include <google/protobuf/text_format.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-
-#include "proto/gnet.pb.h"
+namespace gnet {
+namespace proto { class NODE; }
 
 // 路由表
 class Router
 {
     // name <--> node
-    typedef std::map<std::string, const GNET::NODE*> NODE_MAP_T;
+    typedef std::map<std::string, const proto::NODE*> NODE_MAP_T;
     // node <--> node's parent
-    typedef std::map<const GNET::NODE*, const GNET::NODE*> PARENT_MAP_T;
+    typedef std::map<const proto::NODE*, const proto::NODE*> PARENT_MAP_T;
 
 public:
     Router() {}
@@ -24,17 +22,19 @@ public:
     int Init(const std::string& file);
     int Reload(const std::string& file);
 
-    const GNET::NODE* GetNodeByName(const std::string& name) const;
-    const GNET::NODE* GetParentNode(const GNET::NODE*) const;
-    const GNET::NODE* GetRootNode() const { return &root_; }
+    const proto::NODE* GetNodeByName(const std::string& name) const;
+    const proto::NODE* GetParentNode(const proto::NODE*) const;
+    const proto::NODE* GetRootNode() const { return &root_; }
 
 private:
-    void do_mapping(const GNET::NODE*);
+    void do_mapping(const proto::NODE*);
 
 private:
-    GNET::NODE root_;
+    proto::NODE root_;
     NODE_MAP_T nodes_map_;
     PARENT_MAP_T parents_map_;
 };
+
+}
 
 #endif

@@ -1,14 +1,20 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
+#include <google/protobuf/text_format.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+
+#include "proto/gnet.pb.h"
 #include "src/router.h"
+
+using namespace gnet;
 
 int Router::Init(const std::string& file)
 {
     return Reload(file);
 }
 
-void Router::do_mapping(const GNET::NODE* node)
+void Router::do_mapping(const proto::NODE* node)
 {
     if (node) {
         nodes_map_.insert(std::make_pair(node->name(), node));
@@ -23,7 +29,7 @@ int Router::Reload(const std::string& file)
 {
     int fd = open(file.c_str(), O_RDONLY);
     if (fd < 0) {
-        return GNET::ERR_CFG_NOT_EXIST;
+        return proto::ERR_CFG_NOT_EXIST;
     }
 
     google::protobuf::io::FileInputStream fi(fd);
@@ -31,23 +37,23 @@ int Router::Reload(const std::string& file)
 
     root_.Clear();
     if (!google::protobuf::TextFormat::Parse(&fi, &root_)) {
-        return GNET::ERR_CFG_PARSE;
+        return proto::ERR_CFG_PARSE;
     }
 
     nodes_map_.clear();
     parents_map_.clear();
     do_mapping(&root_);
 
-    return GNET::SUCCESS;
+    return proto::SUCCESS;
 }
 
-const GNET::NODE* Router::GetNodeByName(const std::string& name) const
+const proto::NODE* Router::GetNodeByName(const std::string& name) const
 {
     NODE_MAP_T::const_iterator it = nodes_map_.find(name);
     return it == nodes_map_.end() ? NULL : it->second;
 }
 
-const GNET::NODE* Router::GetParentNode(const GNET::NODE* node) const
+const proto::NODE* Router::GetParentNode(const proto::NODE* node) const
 {
     PARENT_MAP_T::const_iterator it = parents_map_.find(node);
     return it == parents_map_.end() ? NULL : it->second;

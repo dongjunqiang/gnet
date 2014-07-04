@@ -3,8 +3,11 @@
 
 #include <string>
 
-#include "proto/gnet.pb.h"
+namespace gnet {
+namespace proto { class Address; }
 
-int ParseAddress(const std::string& addr_cfg, GNET::Address& addr);
+int ParseAddress(const std::string& addr_cfg, proto::Address& addr);
+
+}
 
 #endif

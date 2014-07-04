@@ -4,3 +4,6 @@
 *.o
 build
 release-*
+proto/*.pb.cc
+proto/*.pb.h
+proto/*.desc

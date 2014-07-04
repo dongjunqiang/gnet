@@ -7,4 +7,4 @@ then
     rm ./*.pb.*
 fi
 
-$BIN --descriptor_set_out=gnet.desc --include_imports --cpp_out=./ *.proto
+$BIN --descriptor_set_out=gnet.proto.desc --include_imports --cpp_out=./ *.proto

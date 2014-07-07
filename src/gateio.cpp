@@ -1,9 +1,9 @@
 #include <assert.h>
-#include <gbase/net/sock.h>
 
 #include "src/address.h"
 #include "src/gateio.h"
 
+/*
 GateIO::GateIO(GateBase* gate)
       : reactor_(NULL)
       , name_("")
@@ -279,4 +279,4 @@ const std::string* GateIO::get_name(sock_t sock) const
     NAME_MAP::const_iterator it = names_.find(sock);
     return it == names_.end() ? NULL : &it->second;
 }
-
+*/

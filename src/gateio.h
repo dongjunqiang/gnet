@@ -4,23 +4,31 @@
 #include <map>
 #include <string>
 #include <functional>
-
+/*
 #include <gbase/net/reactor.h>
 #include <gbase/net/connector.h>
 #include <gbase/net/acceptor.h>
+*/
 
 #include "proto/gnet.pb.h"
+
+namespace gnet {
 
 class GateBase
 {
 public:
     virtual ~GateBase() {}
 
-    virtual void OnData(const std::string&, const GNET::PKGData&) = 0;
+    virtual void OnData(const std::string&, const gnet::proto::PKGData&) = 0;
     virtual void OnDiscon(const std::string&) = 0;
     virtual void OnBuild(const std::string&) = 0;
 };
 
+class GateIO
+{
+};
+
+/*
 class GateIO
 {
 private:
@@ -80,6 +88,9 @@ private:
     RAW_CON_MAP raw_cons_;
     NAME_MAP names_;
 };
+*/
+
+}
 
 #endif
 

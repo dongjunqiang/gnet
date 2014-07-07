@@ -1,12 +1,18 @@
 #ifndef GNET_COROUTINE_H_
 #define GNET_COROUTINE_H_
 
+#include <functional>
+#include <map>
+
+#include <assert.h>
 #include <ucontext.h>
-#include <sys/mman.h>
+#include <unistd.h>
+
+#include "src/singleton.h"
 
 namespace gnet {
 
-class CoroutineManager;
+class Scheduler;
 
 class Coroutine
 {
@@ -21,47 +27,59 @@ public:
     typedef std::function<void (void)> FUNC;
     typedef char* SP;
 
-    friend class CroutineManager;
-       
-private:
-    Coroutine(CoroutineManager* manager, FUNC func) : func_(func),
-                                                    , manager_(manager)
-    {}
+    #define RESERVED_SIZE getpagesize()
 
-    virtual ~Coroutine() {}
+    friend class Scheduler;
 
+    int GetId() const { return id_; }
+    int GetStatus() const { return status_; }
 
 private:
+    Coroutine(int id,  size_t stacksz, FUNC func);
+    virtual ~Coroutine();
+
+    void callback() { return func_(); }
+
+    void start();
+    void resume();
+    void yield();
+
+    static void routine();
+
+private:
+    int id_;
     int status_;
     FUNC func_;
     SP stack_;
+    size_t stacksz_;
     ucontext_t ctx_;
-    CoroutineManager* manager_; 
 };
 
-class CoroutineManager
+class Scheduler : public Singleton<Scheduler>
 {
+    typedef ::std::map<int, Coroutine*> MAP_T;
+    typedef MAP_T::iterator ITER_T;
+    typedef MAP_T::const_iterator CITER_T;
+
 public:
-    CoroutineManager(size_t stack_size) : stack_size_(stack_size)
-                                        , current_(-1)
-    {
-    }
+    Scheduler();
+    ~Scheduler();
 
-    virtual ~CoroutineManager() {}
+    Coroutine* CreateCoroutine(Coroutine::FUNC func, size_t stacksz = (32 << 10));
+    void RemoveCoroutine(Coroutine* cr);
+    void RemoveCoroutine(int id);
 
-    Coroutine* CreateCoroutine(Coroutine::FUNC func)
-    {
-        Coroutine* co = new Coroutine(func);
-    }
+    void Resume(Coroutine* cr);
+    void Yield(Coroutine* cr);
 
+    Coroutine* GetCurrent() const { return current_; }
+    ucontext_t* GetMain() { return &main_; }
 
 private:
     ucontext_t main_;
-    size_t stack_size_;
-    int current_;
-    ::std::vector<Coroutine*> units_;
+    Coroutine* current_;
+    MAP_T units_;
 };
-
 
 }
 

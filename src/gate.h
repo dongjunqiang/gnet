@@ -7,6 +7,8 @@
 #include "src/router.h"
 #include "src/gateio.h"
 
+namespace gnet {
+
 struct Gate : public GateBase
 {
 public:
@@ -17,15 +19,16 @@ public:
 
     int Poll();
 
-    virtual void OnData(const std::string&, const GNET::PKGData&);
+    virtual void OnData(const std::string&, const gnet::proto::PKGData&);
     virtual void OnDiscon(const std::string&);
     virtual void OnBuild(const std::string&);
 
 private:
     std::string name_;
-    Router* router_;
-    GateIO* io_;
+    gnet::Router* router_;
+    // gnet::GateIO* io_;
 };
 
+}
 #endif
 

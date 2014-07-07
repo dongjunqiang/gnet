@@ -3,9 +3,8 @@
 
 using namespace gnet;
 
-Coroutine::Coroutine(int id,  size_t stacksz, FUNC func)
-         : id_(id)
-         , status_(S_INIT)
+Coroutine::Coroutine(FUNC func, size_t stacksz)
+         : status_(S_INIT)
          , func_(func)
          , stack_(NULL)
          , stacksz_(stacksz)
@@ -17,15 +16,22 @@ Coroutine::Coroutine(int id,  size_t stacksz, FUNC func)
     assert(ret == 0);
 
     stack_ = stack_ + RESERVED_SIZE;
+
+    static int idx = 0;
+    id_ = ++ idx;
+
+    Scheduler::Instance()->AddCoroutine(this);
 }
 
 Coroutine::~Coroutine()
 {
+    Scheduler::Instance()->RemoveCoroutine(this);
+
     stack_ -= RESERVED_SIZE;
     free(stack_);
 }
 
-void Coroutine::start()
+void Coroutine::init_context()
 {
     getcontext(&ctx_);
     ctx_.uc_stack.ss_sp = stack_;
@@ -39,16 +45,29 @@ void Coroutine::start()
     swapcontext(main, &ctx_);
 }
 
-void Coroutine::resume()
+void Coroutine::Resume()
 {
-    status_ = S_AWAKE;
-    swapcontext(Scheduler::Instance()->GetMain(), &ctx_);
+    switch (status_)
+    {
+        case S_INIT:
+            init_context();
+            break;
+        case S_SLEEP:
+            Scheduler::Instance()->SetCurrent(this);
+            status_ = S_AWAKE;
+            swapcontext(Scheduler::Instance()->GetMain(), &ctx_);
+            break;
+        default:
+            assert(0);
+    }
 }
 
-void Coroutine::yield()
+void Coroutine::Yield()
 {
     status_ = S_SLEEP;
     swapcontext(&ctx_, Scheduler::Instance()->GetMain());
+
+    Scheduler::Instance()->SetCurrent(NULL);
 }
 
 void Coroutine::routine()
@@ -56,11 +75,12 @@ void Coroutine::routine()
     Scheduler* sched = Scheduler::Instance();
     Coroutine* cr = sched->GetCurrent();
     if (cr) {
-        cr->callback();
-        sched->RemoveCoroutine(cr);
+        cr->func_();
         delete cr;
     }
 }
+
+////////////////////////////////////////////////////////////////
 
 Scheduler::Scheduler()
          : current_(NULL)
@@ -73,49 +93,5 @@ Scheduler::~Scheduler()
         delete it->second;
         it->second = NULL;
     }
-}
-
-Coroutine* Scheduler::CreateCoroutine(Coroutine::FUNC func, size_t stacksz)
-{
-    static int idx = 0;
-    Coroutine* co = new Coroutine(++ idx, stacksz, func);
-    units_.insert(std::make_pair(idx, co));
-    return co;
-}
-
-void Scheduler::RemoveCoroutine(Coroutine* cr)
-{
-    if (cr) {
-        return RemoveCoroutine(cr->GetId());
-    }
-}
-
-void Scheduler::RemoveCoroutine(int id)
-{
-    units_.erase(id);
-}
-
-void Scheduler::Resume(Coroutine* cr)
-{
-    assert(cr);
-
-    switch (cr->GetStatus())
-    {
-        case Coroutine::S_INIT:
-            cr->start();
-            break;
-        case Coroutine::S_SLEEP:
-            current_ = cr;
-            cr->resume();
-            break;
-        default:
-            assert(0);
-    }
-}
-
-void Scheduler::Yield(Coroutine* cr)
-{
-    current_ = NULL;
-    cr->yield();
 }
 

@@ -29,20 +29,17 @@ public:
 
     #define RESERVED_SIZE getpagesize()
 
-    friend class Scheduler;
+    Coroutine(FUNC func, size_t stacksz = (32 << 10));
+    virtual ~Coroutine();
 
     int GetId() const { return id_; }
     int GetStatus() const { return status_; }
 
+    void Resume();
+    void Yield();
+
 private:
-    Coroutine(int id,  size_t stacksz, FUNC func);
-    virtual ~Coroutine();
-
-    void callback() { return func_(); }
-
-    void start();
-    void resume();
-    void yield();
+    void init_context();
 
     static void routine();
 
@@ -61,18 +58,29 @@ class Scheduler : public Singleton<Scheduler>
     typedef MAP_T::iterator ITER_T;
     typedef MAP_T::const_iterator CITER_T;
 
+    friend class Coroutine;
+
 public:
     Scheduler();
     ~Scheduler();
 
-    Coroutine* CreateCoroutine(Coroutine::FUNC func, size_t stacksz = (32 << 10));
-    void RemoveCoroutine(Coroutine* cr);
-    void RemoveCoroutine(int id);
+private:
 
-    void Resume(Coroutine* cr);
-    void Yield(Coroutine* cr);
+    void AddCoroutine(Coroutine* cr) {
+        if (cr) {
+            units_.insert(std::make_pair(cr->GetId(), cr));
+        }
+    }
+
+    void RemoveCoroutine(Coroutine* cr) {
+        if (cr) {
+            units_.erase(cr->GetId());
+        }
+    }
 
     Coroutine* GetCurrent() const { return current_; }
+    void SetCurrent(Coroutine* cr) { current_ = cr; }
+
     ucontext_t* GetMain() { return &main_; }
 
 private:

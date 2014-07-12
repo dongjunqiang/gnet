@@ -8,15 +8,15 @@
 
 #include "coroutine.h"
 #include "reactor.h"
+#include "connector.h"
 #include "acceptor.h"
 
 using namespace gnet;
 
-#define MASTER_STACK_SIZE (8 << 20)
+#define ACCEPTOR_STACK (32 << 10)
 
 Acceptor::Acceptor(Reactor* reactor, const std::string& host, int16_t port)
-        : reactor_(reactor)
-        , main_(NULL)
+        : Handle(reactor)
 {
     int ret;
     fd_ = socket(AF_INET, SOCK_STREAM, 0);
@@ -34,18 +34,10 @@ Acceptor::Acceptor(Reactor* reactor, const std::string& host, int16_t port)
 
     ret = listen(fd_, 1024);
     assert(ret == 0);
-
-    main_ = new Coroutine(std::bind(&Acceptor::main, this), MASTER_STACK_SIZE);
-    assert(main_);
-
-    ret = reactor_->AddInOut(main_, fd_);
-    assert(ret == 0);
 }
 
 Acceptor::~Acceptor()
 {
-    reactor_->Del(fd_); 
-    delete main_;
 }
 
 void Acceptor::parse_address(sockaddr_in* addr, const std::string& host, int16_t port)
@@ -71,16 +63,21 @@ void Acceptor::parse_address(sockaddr_in* addr, const std::string& host, int16_t
     addr->sin_port = htons(port);
 }
 
-void Acceptor::main()
+void Acceptor::proc_in()
 {
     while (true) {
         struct sockaddr addr;
         socklen_t len = sizeof(addr);
         int fd = accept(fd_, &addr, &len);
         if (fd > 0) {
-            // TODO:
+            Connector* con = new Connector(reactor_, fd);
+            con->Start();
         }
-        main_->Yield();
+        in_->Yield();
     }
+}
+
+void Acceptor::proc_out()
+{
 }
 

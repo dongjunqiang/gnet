@@ -7,6 +7,7 @@ namespace gnet {
 
 #define EPOLL_SIZE 10240
 
+class Handle;
 class Coroutine;
 
 class Reactor
@@ -15,14 +16,18 @@ public:
     Reactor();
     ~Reactor();
 
-    int AddIn(Coroutine* co, int fd) {
-        return Add(co, fd, EPOLLIN | EPOLLERR | EPOLLHUP);
+    int AddIn(Handle* handle, int fd) {
+        return Add(handle, fd, EPOLLIN | EPOLLERR | EPOLLHUP);
     }
-    int AddInOut(Coroutine* co, int fd) {
-         return Add(co, fd, EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP);
+    int ModIn(Handle* handle, int fd) {
+        return Mod(handle, fd, EPOLLIN | EPOLLERR | EPOLLHUP);
+    }
+    int ModInOut(Handle* handle, int fd) {
+         return Mod(handle, fd, EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP);
     }
 
-    int Add(Coroutine* co, int fd, int events);
+    int Add(Handle* handle, int fd, int events);
+    int Mod(Handle* handle, int fd, int events);
     int Del(int fd);
 
     void Start();

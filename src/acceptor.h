@@ -4,11 +4,12 @@
 #include <stdint.h>
 #include <string>
 
+#include "handle.h"
+
 namespace gnet {
 
-class Coroutine;
 class Reactor;
-class Acceptor 
+class Acceptor : public Handle
 {
 public:
     Acceptor(Reactor* reactor, const std::string& host, int16_t port);
@@ -16,12 +17,9 @@ public:
 
 private:
     void parse_address(sockaddr_in* addr, const std::string& host, int16_t port);
-    void main();
 
-private:
-    Reactor* reactor_;
-    int fd_;
-    Coroutine* main_;
+    void proc_in();
+    void proc_out();
 };
 
 }

@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "coroutine.h"
+#include "handle.h"
 #include "reactor.h"
 
 using namespace gnet;
@@ -29,12 +30,20 @@ void Reactor::Start()
     main_->Resume();
 }
 
-int Reactor::Add(Coroutine* co, int fd, int events)
+int Reactor::Add(Handle* handle, int fd, int events)
 {
     struct epoll_event event;
     event.events = events;
-    event.data.ptr = static_cast<void*>(co);
+    event.data.ptr = static_cast<void*>(handle);
     return epoll_ctl(fd_, EPOLL_CTL_ADD, fd, &event);
+}
+
+int Reactor::Mod(Handle* handle, int fd, int events)
+{
+    struct epoll_event event;
+    event.events = events;
+    event.data.ptr = static_cast<void*>(handle);
+    return epoll_ctl(fd_, EPOLL_CTL_MOD, fd, &event);
 }
 
 int Reactor::Del(int fd)
@@ -56,8 +65,13 @@ void Reactor::main()
             main_->Yield();
         } else {
             for (int i = 0; i < res; ++ i) {
-                Coroutine* handle = static_cast<Coroutine*>(events_[i].data.ptr);
-                handle->Resume();
+                Handle* handle = static_cast<Handle*>(events_[i].data.ptr);
+                if ((EPOLLIN & events_[i].events) || (EPOLLHUP & events_[i].events)) {
+                    handle->GetIn()->Resume();
+                }
+                if (EPOLLOUT & events_[i].events) {
+                    handle->GetOut()->Resume();
+                }
             }
         }
     }

@@ -24,13 +24,14 @@ public:
 
     const proto::NODE* GetNodeByName(const std::string& name) const;
     const proto::NODE* GetParentNode(const proto::NODE*) const;
-    const proto::NODE* GetRootNode() const { return &root_; }
+
+    const proto::NODE* GetRootNode() const { return &route_.root(); }
 
 private:
     void do_mapping(const proto::NODE*);
 
 private:
-    proto::NODE root_;
+    proto::ROUTE route_;
     NODE_MAP_T nodes_map_;
     PARENT_MAP_T parents_map_;
 };

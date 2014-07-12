@@ -23,33 +23,39 @@ enum ERR_CODE
     ERR_GATE_STARTED = -309;
 }
 
-// 服务节点
-message NODE
-{
-    required string name = 1;
-    required string address = 2;
-    repeated NODE children = 3;
-}
-
-// 路由表
-message TABLE
-{
-    optional string desc = 1;
-    required NODE root = 2;
-}
-
 // tcp地址封装
-message TCPAddress
+message TCP
 {
     required string host = 1;
     required int32 port = 2;
 }
 
-// 节点地址封装
-message Address
+// shm地址封装, 只有同物理机器的节点之间才会自动分配shm
+// 约定, a->b的shm, 由物理机器上的GW分配和回收
+message SHM
 {
-    optional TCPAddress tcp = 1;
+    required string src = 1;
+    required string dst = 2;
+    required int32 shmid = 3;
+    required uint32 size = 4;
 }
+
+// 服务节点
+message NODE
+{
+    required string name = 1;
+    required TCP tcp = 2;
+    repeated NODE children = 3;
+    repeated SHM shms = 4;
+}
+
+// 路由表
+message ROUTE
+{
+    required NODE root = 1;
+}
+
+//////////////////////////////////////////
 
 enum PKGCmd {
     CMD_DATA = 1;
@@ -58,30 +64,23 @@ enum PKGCmd {
     CMD_ROUTE = 4;
 }
 
+message PKGHead {
+    required PKGCmd cmd = 1;
+    optional uint32 timestamp = 2;
+    optional uint32 sequence = 3;
+}
+
 message PKGSyn
 {
-    required string name = 1;
-}
-message PKGRoute
-{
-    optional TABLE table = 1;
 }
 message PKGAck
 {
-}
-message PKGData
-{
-    required string src = 1;
-    optional string dst = 2;    // 不存在表示广播
-    required bytes data = 3;
 }
 
 message PKG
 {
     required PKGCmd cmd = 1;
-    optional PKGData data = 2;
     optional PKGSyn syn = 3;
     optional PKGAck ack = 4;
-    optional PKGRoute route = 5;
 }
 

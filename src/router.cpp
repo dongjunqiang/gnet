@@ -35,14 +35,16 @@ int Router::Reload(const std::string& file)
     google::protobuf::io::FileInputStream fi(fd);
     fi.SetCloseOnDelete(true);
 
-    root_.Clear();
-    if (!google::protobuf::TextFormat::Parse(&fi, &root_)) {
+    route_.Clear();
+    if (!google::protobuf::TextFormat::Parse(&fi, &route_)) {
         return proto::ERR_CFG_PARSE;
     }
 
     nodes_map_.clear();
     parents_map_.clear();
-    do_mapping(&root_);
+
+    assert(route_.has_root());
+    do_mapping(&route_.root());
 
     return proto::SUCCESS;
 }

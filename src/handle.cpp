@@ -3,6 +3,7 @@
 
 #include "reactor.h"
 #include "coroutine.h"
+#include "log.h"
 #include "handle.h"
 
 using namespace gnet;
@@ -31,4 +32,5 @@ void Handle::Start()
     assert(fd_ > 0);
     int ret = reactor_->AddIn(this, fd_);
     assert(ret == 0);
+    debug("handle %d start", fd_);
 }

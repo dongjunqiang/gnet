@@ -17,13 +17,13 @@ public:
     ~Reactor();
 
     int AddIn(Handle* handle, int fd) {
-        return Add(handle, fd, EPOLLIN | EPOLLERR | EPOLLHUP);
+        return Add(handle, fd, EPOLLIN | EPOLLET | EPOLLHUP);
     }
     int ModIn(Handle* handle, int fd) {
-        return Mod(handle, fd, EPOLLIN | EPOLLERR | EPOLLHUP);
+        return Mod(handle, fd, EPOLLIN | EPOLLET | EPOLLHUP);
     }
     int ModInOut(Handle* handle, int fd) {
-         return Mod(handle, fd, EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP);
+         return Mod(handle, fd, EPOLLIN | EPOLLOUT | EPOLLET | EPOLLHUP);
     }
 
     int Add(Handle* handle, int fd, int events);

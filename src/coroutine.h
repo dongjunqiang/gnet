@@ -60,12 +60,11 @@ class Scheduler : public Singleton<Scheduler>
 
     friend class Coroutine;
 
-public:
+protected:
     Scheduler();
     ~Scheduler();
 
 private:
-
     void AddCoroutine(Coroutine* cr) {
         if (cr) {
             units_.insert(std::make_pair(cr->GetId(), cr));

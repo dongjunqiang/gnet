@@ -11,6 +11,7 @@
 #include "coroutine.h"
 #include "reactor.h"
 #include "buffer.h"
+#include "log.h"
 #include "connector.h"
 
 using namespace gnet;
@@ -49,8 +50,10 @@ Connector::~Connector()
 
 int Connector::Send(const char* buffer, int len)
 {
-    if (wbuf_->Wlen() < len)
+    if (wbuf_->Wlen() < len) {
+        error("connector %d write buffer full", fd_);
         return -1;
+    }
     wbuf_->Write(len, buffer);
     reactor_->ModInOut(this, fd_);
     return 0;
@@ -61,24 +64,26 @@ void Connector::proc_in()
     int res = -1;
     while (true) {
         if (rbuf_->Wlen() <= 0) {
-            // TODO: full
-        }
-        res = read(fd_, rbuf_->Wbuf(), rbuf_->Wlen());
-        if (res < 0) {
-            if (EAGAIN == errno || EINTR == errno) {
-                in_->Yield();
-            } else {
-                // TODO: fail
+            error("connector %d read buffer full", fd_);
+            in_->Yield();
+        } else {
+            res = read(fd_, rbuf_->Wbuf(), rbuf_->Wlen());
+            if (res < 0) {
+                if (EAGAIN == errno || EINTR == errno) {
+                    in_->Yield();
+                } else {
+                    error("connector %d read get %d", fd_, errno);
+                    delete this;
+                    return;
+                }
+            } else if (res == 0) {
+                debug("connector %d disconnect", fd_);
                 delete this;
                 return;
+            } else {
+                rbuf_->Write(res);
+                // TODO: read (rbuf_->Rbuf(), rbuf_->Rlen())
             }
-        } else if (res == 0) {
-            // TODO: disconnect
-            delete this;
-            return;
-        } else {
-            rbuf_->Write(res);
-            // TODO: read (rbuf_->Rbuf(), rbuf_->Rlen())
         }
     }
 }
@@ -94,18 +99,19 @@ void Connector::proc_out()
             res = write(fd_, wbuf_->Rbuf(), wbuf_->Rlen());
             if (res < 0) {
                 if (EAGAIN != errno && EINTR != errno) {
-                   // TODO: fail
+                    error("connector %d write get %d", fd_, errno);
                     delete this;
                     return;
                 }
             } else if (res == 0) {
-                // TODO: disconnect
+                debug("connector %d disconnect", fd_);
                 delete this;
                 return;
             } else {
                 wbuf_->Read(res);
                 if (wbuf_->Rlen() == 0) {
                     reactor_->ModIn(this, fd_);
+                    out_->Yield();
                 }
             }
         }

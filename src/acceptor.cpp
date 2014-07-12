@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <assert.h>
 #include <functional>
 
@@ -10,6 +11,7 @@
 #include "reactor.h"
 #include "connector.h"
 #include "acceptor.h"
+#include "log.h"
 
 using namespace gnet;
 
@@ -30,6 +32,11 @@ Acceptor::Acceptor(Reactor* reactor, const std::string& host, int16_t port)
     parse_address(&addr, host, port);
 
     ret = bind(fd_, (struct sockaddr*)&addr, sizeof(addr));
+    assert(ret == 0);
+
+    int flags = fcntl(fd_, F_GETFL, NULL);
+    assert(flags >= 0);
+    ret = fcntl(fd_, F_SETFL, flags | O_NONBLOCK);
     assert(ret == 0);
 
     ret = listen(fd_, 1024);
@@ -71,6 +78,7 @@ void Acceptor::proc_in()
         int fd = accept(fd_, &addr, &len);
         if (fd > 0) {
             Connector* con = new Connector(reactor_, fd);
+            debug("connector %d start.", fd);
             con->Start();
         }
         in_->Yield();

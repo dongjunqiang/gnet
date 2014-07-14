@@ -30,7 +30,7 @@ public:
     int Mod(Handle* handle, int fd, int events);
     int Del(int fd);
 
-    void Start();
+    void Resume();
 
 private:
     void main();

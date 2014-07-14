@@ -25,7 +25,7 @@ Reactor::~Reactor()
     delete main_;
 }
 
-void Reactor::Start()
+void Reactor::Resume()
 {
     main_->Resume();
 }

@@ -3,7 +3,7 @@
 
 namespace gnet {
 
-#define STACK_SIZE (256 << 10)
+#define STACK_SIZE (1 << 20)
 
 class Reactor;
 class Coroutine;

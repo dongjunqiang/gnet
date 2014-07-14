@@ -18,6 +18,11 @@ public:
     // return < 0, fail
     int Send(const char* buffer, int len);
 
+    // return bytes should be read
+    virtual int OnRead(const char* buffer, int len);
+
+    virtual void OnDisconnect();
+
 private:
     void proc_in();
     void proc_out();

@@ -19,16 +19,12 @@ public:
     Router() {}
     ~Router() {}
 
-    int Init(const std::string& file);
-    int Reload(const std::string& file);
+    int Init();
 
     const proto::NODE* get_node(const std::string& name) const;
     const proto::NODE* get_parent(const proto::NODE*) const;
 
     const proto::NODE* get_root() const { return &route_.root(); }
-
-private:
-    void do_mapping(const proto::NODE*);
 
 private:
     proto::ROUTE route_;

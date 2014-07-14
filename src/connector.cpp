@@ -57,16 +57,19 @@ void Connector::proc_in()
                     in_->Yield();
                 } else {
                     error("connector %d read get %d", fd_, errno);
+                    OnDisconnect();
                     delete this;
                     return;
                 }
             } else if (res == 0) {
-                debug("connector %d disconnect", fd_);
+                OnDisconnect();
                 delete this;
                 return;
             } else {
                 rbuf_->Write(res);
-                // TODO: read (rbuf_->Rbuf(), rbuf_->Rlen())
+                int nread = OnRead(rbuf_->rbuf(), rbuf_->rlen());
+                assert(nread >= 0 && nread <= rbuf_->rlen());
+                rbuf_->Read(nread);
             }
         }
     }
@@ -84,11 +87,12 @@ void Connector::proc_out()
             if (res < 0) {
                 if (EAGAIN != errno && EINTR != errno) {
                     error("connector %d write get %d", fd_, errno);
+                    OnDisconnect();
                     delete this;
                     return;
                 }
             } else if (res == 0) {
-                debug("connector %d disconnect", fd_);
+                OnDisconnect();
                 delete this;
                 return;
             } else {
@@ -100,5 +104,16 @@ void Connector::proc_out()
             }
         }
     }
+}
+
+int Connector::OnRead(const char* buffer, int len)
+{
+    debug("connector[%d] recv %d bytes", fd_, len);
+    return len;
+}
+
+void Connector::OnDisconnect()
+{
+    debug("connector[%d] disconnect", fd_);
 }
 

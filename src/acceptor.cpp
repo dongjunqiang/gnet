@@ -41,9 +41,7 @@ void Acceptor::proc_in()
         socklen_t len = sizeof(addr);
         int fd = accept(fd_, &addr, &len);
         if (fd > 0) {
-            Connector* con = new Connector(reactor_, fd);
-            debug("connector %d start.", fd);
-            con->Start();
+            OnAccept(fd);
         }
         in_->Yield();
     }
@@ -51,5 +49,12 @@ void Acceptor::proc_in()
 
 void Acceptor::proc_out()
 {
+}
+
+void Acceptor::OnAccept(int fd)
+{
+    Connector* con = new Connector(reactor_, fd);
+    debug("connector %d start.", fd);
+    con->Start();
 }
 

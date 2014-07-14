@@ -15,6 +15,8 @@ public:
     Acceptor(Reactor* reactor, const std::string& host, int16_t port);
     virtual ~Acceptor();
 
+    virtual void OnAccept(int fd);
+
 private:
     void proc_in();
     void proc_out();

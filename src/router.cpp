@@ -9,43 +9,9 @@
 
 using namespace gnet;
 
-int Router::Init(const std::string& file)
+int Router::Init()
 {
-    return Reload(file);
-}
-
-void Router::do_mapping(const proto::NODE* node)
-{
-    if (node) {
-        nodes_map_.insert(std::make_pair(node->name(), node));
-        for (int i = 0; i < node->children_size(); ++ i) {
-            parents_map_.insert(std::make_pair(&node->children(i), node));
-            do_mapping(&node->children(i));
-        }
-    }
-}
-
-int Router::Reload(const std::string& file)
-{
-    int fd = open(file.c_str(), O_RDONLY);
-    if (fd < 0) {
-        return proto::ERR_CFG_NOT_EXIST;
-    }
-
-    google::protobuf::io::FileInputStream fi(fd);
-    fi.SetCloseOnDelete(true);
-
-    route_.Clear();
-    if (!google::protobuf::TextFormat::Parse(&fi, &route_)) {
-        return proto::ERR_CFG_PARSE;
-    }
-
-    nodes_map_.clear();
-    parents_map_.clear();
-
-    assert(route_.has_root());
-    do_mapping(&route_.root());
-
+    // TODO
     return proto::SUCCESS;
 }
 

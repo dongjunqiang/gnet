@@ -5,7 +5,10 @@
 #include <string>
 
 namespace gnet {
-namespace proto { class NODE; }
+namespace proto {
+    class NODE;
+    class ROUTE;
+}
 
 // 路由表
 class Router
@@ -19,12 +22,17 @@ public:
     Router() {}
     ~Router() {}
 
-    int Init();
+    void Init(const proto::ROUTE& route, const std::string& name);
 
     const proto::NODE* get_node(const std::string& name) const;
     const proto::NODE* get_parent(const proto::NODE*) const;
 
     const proto::NODE* get_root() const { return &route_.root(); }
+
+    const proto::ROUTE& get_route() const { return route_; }
+
+private:
+    void load(const proto::NODE*);
 
 private:
     proto::ROUTE route_;

@@ -1,18 +1,24 @@
-#include <stdlib.h>
-#include <fcntl.h>
-
-#include <google/protobuf/text_format.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <assert.h>
 
 #include "proto/gnet.pb.h"
-#include "src/router.h"
+#include "router.h"
 
 using namespace gnet;
 
-int Router::Init()
+void Router::Init(const proto::ROUTE& route, const std::string& name)
 {
-    // TODO
-    return proto::SUCCESS;
+    route_ = route;
+    assert(route_.has_root());
+    load(&route_.root()); 
+}
+
+void Router::load(const proto::NODE* node)
+{
+    nodes_map_.insert(std::make_pair(node->name(), node));
+    for (int i = 0; i < node->children_size(); ++ i) {
+        parents_map_.insert(std::make_pair(&node->children(i), node));
+        load(&node->children(i));
+    }
 }
 
 const proto::NODE* Router::get_node(const std::string& name) const

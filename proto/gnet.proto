@@ -6,21 +6,8 @@ enum ERR_CODE
     BUSY = 1;
     ERROR = -1;
 
-    ERR_ADDRESS_INVALID = -101;
-    ERR_ADDRESS_NOT_SUPPORT = -102;
-
-    ERR_CFG_NOT_EXIST = -201;
-    ERR_CFG_PARSE = -202;
-
-    ERR_GATE_NOT_FOUND = -301;
-    ERR_GATE_CANT_CONNECT = -302;
-    ERR_GATE_CANT_START_LINK = -303;
-    ERR_GATE_LINK_NOT_FOUND = -304;
-    ERR_GATE_PKG_TOO_BIG = -305;
-    ERR_GATE_SEND_FAIL = -306;
-    ERR_GATE_START_FAIL = -307;
-    ERR_GATE_LINK_EXIST = -308;
-    ERR_GATE_STARTED = -309;
+    ERR_NODE_ACK_FAIL = -100;
+    ERR_NODE_CONNECT_FAIL = -101;
 }
 
 // tcp地址封装
@@ -44,7 +31,7 @@ message SHM
 message NODE
 {
     required string name = 1;
-    required TCP tcp = 2;
+    optional TCP tcp = 2;
     repeated NODE children = 3;
     repeated SHM shms = 4;
 }
@@ -57,34 +44,78 @@ message ROUTE
 
 //////////////////////////////////////////
 
-enum PKGCmd {
-    CMD_DATA = 1;
-    CMD_SYN = 2;
-    CMD_ACK = 3;
-    CMD_ROUTE = 4;
+enum Cmd {
+    CMD_GW_REQ = 1;
+    CMD_GW_RSP = 2;
+    CMD_N2G_REQ = 3;
+    CMD_G2N_RSP = 4;
+    CMD_G2M_REQ = 5;
+    CMD_M2G_RSP = 6;
+    CMD_G2M_MOD = 7;
+    CMD_M2G_MOD = 8;
 }
 
-message PKGHead {
-    required PKGCmd cmd = 1;
+message Head {
+    required Cmd cmd = 1;
     optional uint32 timestamp = 2;
     optional uint32 sequence = 3;
 }
 
-message PKGSyn
+message GWReq
+{
+}
+message GWRsp
+{
+    optional TCP addr = 1;      // empty means no GW on this machine
+}
+
+message N2GReq
 {
     required string name = 1;
 }
-message PKGAck
+message G2NRsp
 {
-    // if null, mean you should play as a GW
-    optional TCP gw_addr = 1;
+    required ERR_CODE result = 1;
+    optional ROUTE route = 2;
+}
+
+message G2MReq
+{
+    required string name = 1;
+    required TCP addr = 2;
+}
+message M2GRsp
+{
+    required ERR_CODE result = 1;
+    optional ROUTE route = 2;
+}
+
+message G2MMod
+{
+    required NODE node = 1;     // new node
+    required bool addordel = 2; // true means add
+}
+message M2GMod
+{
+    required NODE node = 1;     // new node
+    required NODE parent = 2;   // new node's parent
+    required bool addordel = 3; // true means add
 }
 
 message PKG
 {
-    required PKGHead head = 1;
+    required Head head = 1;
 
-    optional PKGSyn syn = 2;
-    optional PKGAck ack = 3;
+    optional GWReq gw_req = 2;
+    optional GWRsp gw_rsp = 3;
+
+    optional N2GReq n2g_req = 4;
+    optional G2NRsp g2n_rsp = 5;
+
+    optional G2MReq g2m_req = 6;
+    optional M2GRsp m2g_rsp = 7;
+
+    optional G2MMod g2m_mod = 8;
+    optional M2GMod m2g_mod = 9;
 }
 

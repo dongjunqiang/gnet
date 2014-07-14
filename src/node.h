@@ -14,6 +14,9 @@ namespace proto {
 class Reactor;
 class Coroutine;
 class Node;
+class Router;
+
+#define DEFAULT_GW_PORT 8000
 
 class NodeConnector : public Connector
 {
@@ -39,11 +42,8 @@ class Node
 {
     enum State {
         S_INIT = 0,
-        S_SYN = 1,
-        S_ACK = 2,
-        S_GW = 3,
-        S_GW_SYN = 4,
-        S_GW_ACK = 5,
+        S_REG = 1,
+        S_OK = 2,
     };
 
     friend class NodeConnector;
@@ -58,22 +58,34 @@ public:
 private:
     void main();
 
-    int send_syn();
-    int recv_ack();
+    void proc_gw_rsp(const proto::GWRsp& rsp);
+    void proc_g2n_rsp(const proto::G2NRsp& rsp);
+    void proc_m2g_rsp(const proto::M2GRsp& rsp);
+    void proc_n2g_req(const proto::N2GReq& req);
+    void proc_m2g_mod(const proto::M2GMod& mod);
 
     int send_pkg(NodeConnector* con, proto::PKG& pkg);
-    void recv_pkg(proto::PKG* pkg);
+    void recv_pkg(NodeConnector* con, proto::PKG* pkg);
 
 private:
     int status_;
     bool gw_;
     std::string name_;
     NodeConnector* master_con_;
+
+    // for common node
     NodeConnector* gw_con_;
+
+    // for gw node
     NodeAcceptor* gw_acc_;
     Reactor* reactor_;
     Coroutine* main_;
+
+    // receive cache
     proto::PKG* recv_;
+    NodeConnector* recv_con_;
+
+    Router* router_;
 };
 
 }

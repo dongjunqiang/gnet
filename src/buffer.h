@@ -17,10 +17,10 @@ public:
 
     void Reset();
 
-    int Rlen() { return wpos_ > rpos_ ? wpos_ - rpos_ : 0; }
-    int Wlen() { return size_ - wpos_; }
-    char* Rbuf() { return data_ + rpos_; }
-    char* Wbuf() { return data_ + wpos_; }
+    int rlen() { return wpos_ > rpos_ ? wpos_ - rpos_ : 0; }
+    int wlen() { return size_ - wpos_; }
+    char* rbuf() { return data_ + rpos_; }
+    char* wbuf() { return data_ + wpos_; }
 
 private:
     int rpos_;

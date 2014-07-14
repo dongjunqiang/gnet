@@ -32,8 +32,8 @@ public:
     Coroutine(FUNC func, size_t stacksz = (32 << 10));
     virtual ~Coroutine();
 
-    int GetId() const { return id_; }
-    int GetStatus() const { return status_; }
+    int get_id() const { return id_; }
+    int get_status() const { return status_; }
 
     void Resume();
     void Yield();
@@ -67,13 +67,13 @@ protected:
 private:
     void AddCoroutine(Coroutine* cr) {
         if (cr) {
-            units_.insert(std::make_pair(cr->GetId(), cr));
+            units_.insert(std::make_pair(cr->get_id(), cr));
         }
     }
 
     void RemoveCoroutine(Coroutine* cr) {
         if (cr) {
-            units_.erase(cr->GetId());
+            units_.erase(cr->get_id());
         }
     }
 

@@ -72,15 +72,19 @@ message PKGHead {
 
 message PKGSyn
 {
+    required string name = 1;
 }
 message PKGAck
 {
+    // if null, mean you should play as a GW
+    optional TCP gw_addr = 1;
 }
 
 message PKG
 {
-    required PKGCmd cmd = 1;
-    optional PKGSyn syn = 3;
-    optional PKGAck ack = 4;
+    required PKGHead head = 1;
+
+    optional PKGSyn syn = 2;
+    optional PKGAck ack = 3;
 }
 

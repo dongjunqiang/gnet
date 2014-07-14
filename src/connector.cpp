@@ -1,17 +1,10 @@
-#include <assert.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-
 #include <functional>
 
 #include "coroutine.h"
 #include "reactor.h"
 #include "buffer.h"
 #include "log.h"
+#include "sock.h"
 #include "connector.h"
 
 using namespace gnet;
@@ -23,17 +16,8 @@ Connector::Connector(Reactor* reactor, int fd)
          , rbuf_(NULL)
          , wbuf_(NULL)
 {
-    // non block
-    int flags = fcntl(fd, F_GETFL, NULL);
-    assert(flags >= 0);
-    int res = fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-    assert(res == 0);
-
-    // no delay
-    int optval = 1;
-    socklen_t optlen = sizeof(optval);
-    res = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (const char*)&optval, optlen);
-    assert(res == 0);
+    SOCK::set_nonblock(fd);
+    SOCK::set_nodelay(fd);
 
     fd_ = fd;
 
@@ -50,7 +34,7 @@ Connector::~Connector()
 
 int Connector::Send(const char* buffer, int len)
 {
-    if (wbuf_->Wlen() < len) {
+    if (wbuf_->wlen() < len) {
         error("connector %d write buffer full", fd_);
         return -1;
     }
@@ -63,11 +47,11 @@ void Connector::proc_in()
 {
     int res = -1;
     while (true) {
-        if (rbuf_->Wlen() <= 0) {
+        if (rbuf_->wlen() <= 0) {
             error("connector %d read buffer full", fd_);
             in_->Yield();
         } else {
-            res = read(fd_, rbuf_->Wbuf(), rbuf_->Wlen());
+            res = read(fd_, rbuf_->wbuf(), rbuf_->wlen());
             if (res < 0) {
                 if (EAGAIN == errno || EINTR == errno) {
                     in_->Yield();
@@ -92,11 +76,11 @@ void Connector::proc_out()
 {
     int res;
     while (true) {
-        if (wbuf_->Rlen() <= 0) {
+        if (wbuf_->rlen() <= 0) {
             reactor_->ModIn(this, fd_);
             out_->Yield();
         } else {
-            res = write(fd_, wbuf_->Rbuf(), wbuf_->Rlen());
+            res = write(fd_, wbuf_->rbuf(), wbuf_->rlen());
             if (res < 0) {
                 if (EAGAIN != errno && EINTR != errno) {
                     error("connector %d write get %d", fd_, errno);
@@ -109,7 +93,7 @@ void Connector::proc_out()
                 return;
             } else {
                 wbuf_->Read(res);
-                if (wbuf_->Rlen() == 0) {
+                if (wbuf_->rlen() == 0) {
                     reactor_->ModIn(this, fd_);
                     out_->Yield();
                 }

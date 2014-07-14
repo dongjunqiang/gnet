@@ -16,8 +16,6 @@ public:
     virtual ~Acceptor();
 
 private:
-    void parse_address(sockaddr_in* addr, const std::string& host, int16_t port);
-
     void proc_in();
     void proc_out();
 };

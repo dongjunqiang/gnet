@@ -2,6 +2,14 @@
 #define GNET_MSG_MAX (32 << 10)
 
 /*
+int gnet_create(const char* name, const char* master_host, int16_t master_port)
+{
+    Reactor* reactor = new Reactor;
+    
+    Connector* con = new Connector(reactor, fd);
+}
+
+
 typedef struct gnet_msg {
     size_t size;
     char data[GNET_MSG_MAX];

@@ -49,13 +49,13 @@ int Router::Reload(const std::string& file)
     return proto::SUCCESS;
 }
 
-const proto::NODE* Router::GetNodeByName(const std::string& name) const
+const proto::NODE* Router::get_node(const std::string& name) const
 {
     NODE_MAP_T::const_iterator it = nodes_map_.find(name);
     return it == nodes_map_.end() ? NULL : it->second;
 }
 
-const proto::NODE* Router::GetParentNode(const proto::NODE* node) const
+const proto::NODE* Router::get_parent(const proto::NODE* node) const
 {
     PARENT_MAP_T::const_iterator it = parents_map_.find(node);
     return it == parents_map_.end() ? NULL : it->second;

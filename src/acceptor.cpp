@@ -1,16 +1,11 @@
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <assert.h>
+#include <netinet/in.h>
 #include <functional>
 
 #include "coroutine.h"
 #include "reactor.h"
 #include "connector.h"
 #include "acceptor.h"
+#include "sock.h"
 #include "log.h"
 
 using namespace gnet;
@@ -20,54 +15,23 @@ using namespace gnet;
 Acceptor::Acceptor(Reactor* reactor, const std::string& host, int16_t port)
         : Handle(reactor)
 {
-    int ret;
-    fd_ = socket(AF_INET, SOCK_STREAM, 0);
+    fd_ = SOCK::tcp();
     assert(fd_ > 0);
 
-    int optval = 1;
-    socklen_t optlen = sizeof(optval);
-    setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, (const char*)(&optval), optlen);
+    SOCK::set_reuseaddr(fd_);
+    SOCK::set_nonblock(fd_);
 
-    sockaddr_in addr;
-    parse_address(&addr, host, port);
-
-    ret = bind(fd_, (struct sockaddr*)&addr, sizeof(addr));
+    struct sockaddr_in addr;
+    int ret;
+    ret = SOCK::addr_aton(host, port, &addr);
     assert(ret == 0);
 
-    int flags = fcntl(fd_, F_GETFL, NULL);
-    assert(flags >= 0);
-    ret = fcntl(fd_, F_SETFL, flags | O_NONBLOCK);
-    assert(ret == 0);
-
-    ret = listen(fd_, 1024);
+    ret = SOCK::listen(fd_, (struct sockaddr*)&addr);
     assert(ret == 0);
 }
 
 Acceptor::~Acceptor()
 {
-}
-
-void Acceptor::parse_address(sockaddr_in* addr, const std::string& host, int16_t port)
-{
-    std::string ipstr = host;
-    struct hostent* ent = gethostbyname(host.c_str());
-    if (ent) {
-        char buf[16] = {0};
-        sprintf(buf, "%u.%u.%u.%u",
-            (unsigned char)ent->h_addr_list[0][0],
-            (unsigned char)ent->h_addr_list[0][1],
-            (unsigned char)ent->h_addr_list[0][2],
-            (unsigned char)ent->h_addr_list[0][3]);
-        ipstr = std::string(buf);
-    }
-
-    in_addr ip;
-    int ret = inet_aton(ipstr.c_str(), &ip);
-    assert(ret == 0);
-
-    addr->sin_family = AF_INET;
-    addr->sin_addr = ip;
-    addr->sin_port = htons(port);
 }
 
 void Acceptor::proc_in()

@@ -22,10 +22,10 @@ public:
     int Init(const std::string& file);
     int Reload(const std::string& file);
 
-    const proto::NODE* GetNodeByName(const std::string& name) const;
-    const proto::NODE* GetParentNode(const proto::NODE*) const;
+    const proto::NODE* get_node(const std::string& name) const;
+    const proto::NODE* get_parent(const proto::NODE*) const;
 
-    const proto::NODE* GetRootNode() const { return &route_.root(); }
+    const proto::NODE* get_root() const { return &route_.root(); }
 
 private:
     void do_mapping(const proto::NODE*);

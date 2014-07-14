@@ -67,10 +67,10 @@ void Reactor::main()
             for (int i = 0; i < res; ++ i) {
                 Handle* handle = static_cast<Handle*>(events_[i].data.ptr);
                 if ((EPOLLIN & events_[i].events) || (EPOLLHUP & events_[i].events)) {
-                    handle->GetIn()->Resume();
+                    handle->get_in()->Resume();
                 }
                 if (EPOLLOUT & events_[i].events) {
-                    handle->GetOut()->Resume();
+                    handle->get_out()->Resume();
                 }
             }
         }

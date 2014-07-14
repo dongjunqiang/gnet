@@ -18,7 +18,8 @@ protected:
     ~Log() {}
 
 public:
-    void SetLevel(int level) { level_ = level; }
+    void set_level(int level) { level_ = level; }
+
     void DoLog(int level, struct timeval* now, const char* fmt, ...);
 
 private:

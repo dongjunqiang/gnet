@@ -24,15 +24,15 @@ int Buffer::Read(int len, char* dst)
 {
     if (len < 0)
         return -1;
-    if (len > Rlen())
-        return Read(Rlen(), dst);
+    if (len > rlen())
+        return Read(rlen(), dst);
     if (dst)
-        memcpy(dst, Rbuf(), len);
+        memcpy(dst, rbuf(), len);
     rpos_ += len;
     // drift
     if (rpos_ > (size_ >> 1)) {
-        const char* shift = Rbuf();
-        memcpy(data_, shift, Rlen());
+        const char* shift = rbuf();
+        memcpy(data_, shift, rlen());
         wpos_ -= rpos_;
         rpos_ = 0;
     }
@@ -43,10 +43,10 @@ int Buffer::Peek(int len, char* dst)
 {
     if (len < 0)
         return -1;
-    if (len > Rlen())
-        return Peek(Rlen(), dst);
+    if (len > rlen())
+        return Peek(rlen(), dst);
     if (dst)
-        memcpy(dst, Rbuf(), len);
+        memcpy(dst, rbuf(), len);
     return len;
 }
 
@@ -54,10 +54,10 @@ int Buffer::Write(int len, const char* src)
 {
     if (len < 0)
         return -1;
-    if (Wlen() < len)
-        return Write(Wlen(), src);
+    if (wlen() < len)
+        return Write(wlen(), src);
     if (src)
-        memcpy(Wbuf(), src, len);
+        memcpy(wbuf(), src, len);
     wpos_ += len;
     return len;
 }

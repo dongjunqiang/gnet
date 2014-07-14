@@ -14,8 +14,8 @@ public:
     Handle(Reactor* reactor);
     virtual ~Handle();
 
-    Coroutine* GetIn() const { return in_; }
-    Coroutine* GetOut() const { return out_; }
+    Coroutine* get_in() const { return in_; }
+    Coroutine* get_out() const { return out_; }
 
     void Start();
 

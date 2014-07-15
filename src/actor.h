@@ -1,5 +1,5 @@
-#ifndef GNET_NODE_H_
-#define GNET_NODE_H_
+#ifndef GNET_ACTOR_H_
+#define GNET_ACTOR_H_
 
 #include <string>
 
@@ -9,35 +9,65 @@
 namespace gnet {
 namespace proto {
     class TCP;
-    class PKG;    
+    class PKG;
 }
 class Reactor;
 class Coroutine;
-class Node;
+class Actor;
 class Router;
 
 #define DEFAULT_GW_PORT 8000
 
-class NodeConnector : public Connector
+class ActorConnector : public Connector
 {
 public:
-    NodeConnector(Node* node, int fd);
+    ActorConnector(Actor* node, int fd);
     virtual int OnRead(const char* buffer, int len);
 
 private:
-    Node* node_;
+    Actor* actor_;
 };
 
-class NodeAcceptor : public Acceptor
+class ActorAcceptor : public Acceptor
 {
 public:
-    NodeAcceptor(Node* node, const proto::TCP& addr);
+    ActorAcceptor(Actor* node, const proto::TCP& addr);
     virtual void OnAccept(int fd);
 
 private:
-    Node* node_;
+    Actor* actor_;
 };
 
+class Actor
+{
+    friend class ActorConnector;
+    friend class ActorAcceptor;
+
+public:
+    Actor(const std::string& name);
+    virtual ~Actor();
+
+    void Resume();
+
+protected:
+    virtual void main();
+
+    void recv_pkg(ActorConnector* con, proto::PKG* pkg);
+    int send_pkg(ActorConnector* con, proto::PKG& pkg);
+
+protected:
+    std::string name_;
+    Coroutine* main_;
+    Reactor* reactor_;
+
+    // cache
+    proto::PKG* recv_pkg_;
+    ActorConnector* recv_con_;
+
+    Router* router_;
+};
+
+/*
 class Node
 {
     enum State {
@@ -46,14 +76,9 @@ class Node
         S_OK = 2,
     };
 
-    friend class NodeConnector;
-    friend class NodeAcceptor;
-
 public:
     Node(const std::string& name, const std::string& master_host, int16_t port);
     ~Node();
-
-    void Resume();
 
 private:
     void main();
@@ -64,13 +89,10 @@ private:
     void proc_n2g_req(const proto::N2GReq& req);
     void proc_m2g_mod(const proto::M2GMod& mod);
 
-    int send_pkg(NodeConnector* con, proto::PKG& pkg);
-    void recv_pkg(NodeConnector* con, proto::PKG* pkg);
-
 private:
     int status_;
     bool gw_;
-    std::string name_;
+
     NodeConnector* master_con_;
 
     // for common node
@@ -78,15 +100,8 @@ private:
 
     // for gw node
     NodeAcceptor* gw_acc_;
-    Reactor* reactor_;
-    Coroutine* main_;
-
-    // receive cache
-    proto::PKG* recv_;
-    NodeConnector* recv_con_;
-
-    Router* router_;
 };
+*/
 
 }
 

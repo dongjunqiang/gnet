@@ -62,14 +62,6 @@ void Coroutine::Resume()
     }
 }
 
-void Coroutine::Yield()
-{
-    status_ = S_SLEEP;
-    swapcontext(&ctx_, Scheduler::Instance()->GetMain());
-
-    Scheduler::Instance()->SetCurrent(NULL);
-}
-
 void Coroutine::routine()
 {
     Scheduler* sched = Scheduler::Instance();

@@ -43,7 +43,7 @@ void Acceptor::proc_in()
         if (fd > 0) {
             OnAccept(fd);
         }
-        in_->Yield();
+        reactor_->Resume();
     }
 }
 

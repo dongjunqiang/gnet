@@ -73,9 +73,11 @@ int SOCK::addr_ntoa(const struct sockaddr_in* addr, std::string& addrstr)
     return 0;
 }
 
-int SOCK::connect(int fd, const std::string& ipstr, int16_t port)
+int SOCK::connect(int fd, const std::string& ipstr, int16_t port, int sec)
 {
-    set_nonblock(fd);
+    if (sec > 0) {
+        set_nonblock(fd);
+    }
     set_sndbuf(fd);
     set_rcvbuf(fd);
 
@@ -87,7 +89,7 @@ int SOCK::connect(int fd, const std::string& ipstr, int16_t port)
 
     // try connect
     int ret = ::connect(fd, (const struct sockaddr*)&addr, addr_len);
-    if(ret < 0) {
+    if(ret < 0 && sec > 0) {
         // connect fail
         if(EINPROGRESS != errno)
             return errno;
@@ -97,9 +99,7 @@ int SOCK::connect(int fd, const std::string& ipstr, int16_t port)
         FD_ZERO(&read_events);
         FD_SET(fd, &read_events);
         write_events = exec_events = read_events;
-        struct timeval tv = {1, 0};
-        // tv.tv_sec = 1;
-        // tv.tv_usec = 0;
+        struct timeval tv = {sec, 0};
         ret = select(fd + 1, &read_events, &write_events, &exec_events, &tv);
         if(ret <= 0)
             return ret;

@@ -49,12 +49,12 @@ void Connector::proc_in()
     while (true) {
         if (rbuf_->wlen() <= 0) {
             error("connector %d read buffer full", fd_);
-            in_->Yield();
+            reactor_->Resume();
         } else {
             res = read(fd_, rbuf_->wbuf(), rbuf_->wlen());
             if (res < 0) {
                 if (EAGAIN == errno || EINTR == errno) {
-                    in_->Yield();
+                    reactor_->Resume();
                 } else {
                     error("connector %d read get %d", fd_, errno);
                     OnDisconnect();
@@ -81,7 +81,7 @@ void Connector::proc_out()
     while (true) {
         if (wbuf_->rlen() <= 0) {
             reactor_->ModIn(this, fd_);
-            out_->Yield();
+            reactor_->Resume();
         } else {
             res = write(fd_, wbuf_->rbuf(), wbuf_->rlen());
             if (res < 0) {
@@ -99,7 +99,7 @@ void Connector::proc_out()
                 wbuf_->Read(res);
                 if (wbuf_->rlen() == 0) {
                     reactor_->ModIn(this, fd_);
-                    out_->Yield();
+                    reactor_->Resume();
                 }
             }
         }

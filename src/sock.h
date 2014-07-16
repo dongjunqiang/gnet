@@ -16,7 +16,8 @@ struct SOCK
     static int addr_aton(const std::string& ipstr, int16_t port, struct sockaddr_in* addr);
     static int addr_ntoa(const struct sockaddr_in* addr, std::string& addrstr);
 
-    static int connect(int fd, const std::string& ipstr, int16_t port);
+    // sec = 0 means block connect
+    static int connect(int fd, const std::string& ipstr, int16_t port, int sec = 1);
     static int listen(int fd, struct sockaddr* addr);
     static int accept(int fd, struct sockaddr* addr);
 

@@ -62,7 +62,8 @@ void Reactor::main()
                 assert(0);
             }
         } else if (0 == res) {
-            main_->Yield();
+            usleep(10);
+            // TODO: swap out
         } else {
             for (int i = 0; i < res; ++ i) {
                 Handle* handle = static_cast<Handle*>(events_[i].data.ptr);

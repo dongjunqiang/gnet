@@ -36,7 +36,6 @@ public:
     int get_status() const { return status_; }
 
     void Resume();
-    void Yield();
 
 private:
     void init_context();

@@ -1,5 +1,4 @@
 #include <utility>
-#include <google/protobuf/stubs/common.h>
 
 #include "proto/gnet.pb.h"
 #include "reactor.h"
@@ -8,6 +7,7 @@
 #include "coroutine.h"
 #include "handle.h"
 #include "router.h"
+#include "dr.h"
 #include "actor.h"
 
 using namespace gnet;
@@ -22,27 +22,21 @@ ActorConnector::ActorConnector(Actor* actor, int fd)
 
 int ActorConnector::OnRead(const char* buffer, int len)
 {
-    int nread = 0;
+    int ntotal = 0;
     while (true) {
-        int nhead = sizeof(int);
-        if (len < nhead) break;
-
-        int nbody = *(const int*)(buffer + nread);
-        if (len < nhead + nbody) break;
-
-        const void* data = buffer + nread + nhead;
+        int nread = len;
         proto::PKG* pkg = new proto::PKG;
-        if (!pkg->ParseFromArray(data, nbody)) {
-            error("%s", pkg->InitializationErrorString().c_str());
-        } else {
-            actor_->recv_pkg(this, pkg);
-            delete pkg;
-        }
+        if (!DR::ntoh(buffer, nread, *pkg))
+            break;
 
-        len -= (nhead + nbody);
-        nread += (nhead + nbody);
+        actor_->recv_pkg(this, pkg);
+        actor_->Resume();
+        delete pkg;
+
+        len -= nread; 
+        ntotal += nread;
     }
-    return nread;
+    return ntotal;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -95,11 +89,10 @@ void Actor::Resume()
 int Actor::send_pkg(ActorConnector* con, proto::PKG& pkg)
 {
     debug("send pkg: \n%s", pkg.DebugString().c_str());
-    ::google::protobuf::uint8 buf[1024];
-    int len = pkg.ByteSize() + sizeof(int);
-    assert((int)sizeof(buf) >= len);
-    *(int*)buf = pkg.ByteSize();
-    pkg.SerializeWithCachedSizesToArray(buf + sizeof(int));
+    char buf[1024];
+    int len = sizeof(buf);
+    bool res = DR::hton(pkg, buf, len);
+    assert(res);
     return con->Send((const char*)buf, len);
 }
 
@@ -109,12 +102,12 @@ void Actor::recv_pkg(ActorConnector* con, proto::PKG* pkg)
     recv_pkg_ = pkg;
     recv_con_ = con;
     debug("recv pkg: \n%s", pkg->DebugString().c_str());
-    main_->Resume();
 }
 
 void Actor::main()
 {
     while (true) {
+        // TODO: process pkg
         reactor_->Resume();
     }
 }
@@ -132,16 +125,6 @@ Node::Node(const std::string& name, const std::string& master_host, int16_t mast
     , recv_(NULL)
     , router_(NULL)
 {
-    int fd = SOCK::tcp();
-    assert(fd > 0);
-    int ret = SOCK::connect(fd, master_host, master_port);
-    if (ret < 0) {
-        error("connect to master[%s:%d] get %d", master_host.c_str(), master_port, ret);
-        assert(0);
-    }
-    master_con_= new NodeConnector(this, fd);
-    assert(master_con_);
-    master_con_->Start();
 }
 
 Node::~Node()

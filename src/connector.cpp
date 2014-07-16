@@ -1,20 +1,24 @@
 #include <functional>
 
+#include "proto/gnet.pb.h"
 #include "coroutine.h"
 #include "reactor.h"
 #include "buffer.h"
 #include "log.h"
 #include "sock.h"
+#include "dr.h"
+#include "actor.h"
 #include "connector.h"
 
 using namespace gnet;
 
 #define CONNECTOR_STACK (64 << 10)
 
-Connector::Connector(Reactor* reactor, int fd)
-         : Handle(reactor)
+Connector::Connector(Actor* actor, int fd)
+         : Handle(actor->get_reactor())
          , rbuf_(NULL)
          , wbuf_(NULL)
+         , actor_(actor)
 {
     SOCK::set_nonblock(fd);
     SOCK::set_nodelay(fd);
@@ -108,8 +112,21 @@ void Connector::proc_out()
 
 int Connector::OnRead(const char* buffer, int len)
 {
-    debug("connector[%d] recv %d bytes", fd_, len);
-    return len;
+    int ntotal = 0;
+    while (true) {
+        int nread = len;
+        proto::PKG* pkg = new proto::PKG;
+        if (!DR::ntoh(buffer, nread, *pkg))
+            break;
+
+        actor_->recv_pkg(this, pkg);
+        actor_->Resume();
+        delete pkg;
+
+        len -= nread; 
+        ntotal += nread;
+    }
+    return ntotal;
 }
 
 void Connector::OnDisconnect()

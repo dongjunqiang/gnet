@@ -59,3 +59,9 @@ Actor* Factory::GenClient(const std::string& name, const std::string& host, int1
     return NULL;
 }
 
+Actor* Factory::GenMaster(const std::string& name, const std::string& host, int16_t port)
+{
+    // TODO:
+    return NULL;
+}
+

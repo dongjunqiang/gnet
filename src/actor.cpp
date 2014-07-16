@@ -8,53 +8,11 @@
 #include "handle.h"
 #include "router.h"
 #include "dr.h"
+#include "connector.h"
+#include "acceptor.h"
 #include "actor.h"
 
 using namespace gnet;
-
-////////////////////////////////////////////////////////
-
-ActorConnector::ActorConnector(Actor* actor, int fd)
-              : Connector(actor->reactor_, fd)
-              , actor_(actor)
-{
-}
-
-int ActorConnector::OnRead(const char* buffer, int len)
-{
-    int ntotal = 0;
-    while (true) {
-        int nread = len;
-        proto::PKG* pkg = new proto::PKG;
-        if (!DR::ntoh(buffer, nread, *pkg))
-            break;
-
-        actor_->recv_pkg(this, pkg);
-        actor_->Resume();
-        delete pkg;
-
-        len -= nread; 
-        ntotal += nread;
-    }
-    return ntotal;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-ActorAcceptor::ActorAcceptor(Actor* actor, const proto::TCP& addr)
-             : Acceptor(actor->reactor_, addr.host(), addr.port())
-             , actor_(actor)
-{
-}
-
-void ActorAcceptor::OnAccept(int fd)
-{
-    ActorConnector* con = new ActorConnector(actor_, fd);
-    debug("node connector %d start.", fd);
-    con->Start();
-}
-
-///////////////////////////////////////////////////////////////////////////////
 
 Actor::Actor(const std::string& name)
      : name_(name)
@@ -86,7 +44,7 @@ void Actor::Resume()
     main_->Resume();
 }
 
-int Actor::send_pkg(ActorConnector* con, proto::PKG& pkg)
+int Actor::send_pkg(Connector* con, proto::PKG& pkg)
 {
     debug("send pkg: \n%s", pkg.DebugString().c_str());
     char buf[1024];
@@ -96,9 +54,9 @@ int Actor::send_pkg(ActorConnector* con, proto::PKG& pkg)
     return con->Send((const char*)buf, len);
 }
 
-void Actor::recv_pkg(ActorConnector* con, proto::PKG* pkg)
+void Actor::recv_pkg(Connector* con, proto::PKG* pkg)
 {
-    assert(pkg);
+    assert(pkg && con);
     recv_pkg_ = pkg;
     recv_con_ = con;
     debug("recv pkg: \n%s", pkg->DebugString().c_str());
@@ -113,27 +71,6 @@ void Actor::main()
 }
 
 /*
-Node::Node(const std::string& name, const std::string& master_host, int16_t master_port)
-    : status_(S_INIT)
-    , gw_(false)
-    , name_(name)
-    , master_con_(NULL)
-    , gw_con_(NULL)
-    , gw_acc_(NULL)
-    , reactor_(NULL)
-    , main_(NULL)
-    , recv_(NULL)
-    , router_(NULL)
-{
-}
-
-Node::~Node()
-{
-    if (master_con_) delete master_con_;
-    if (gw_con_) delete gw_con_;
-    if (gw_acc_) delete gw_acc_;
-}
-
 void Node::proc_gw_rsp(const proto::GWRsp& rsp)
 {
     // gw, register to master

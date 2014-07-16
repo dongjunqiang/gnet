@@ -5,13 +5,14 @@
 
 namespace gnet {
 
+class Actor;
 class Reactor;
 class Buffer;
 
 class Connector : public Handle
 {
 public:
-    Connector(Reactor* reactor, int fd);
+    Connector(Actor* actor, int fd);
     virtual ~Connector();
 
     // return 0, success
@@ -30,6 +31,7 @@ private:
 private:
     Buffer* rbuf_;
     Buffer* wbuf_;
+    Actor* actor_;
 };
 
 }

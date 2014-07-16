@@ -7,12 +7,13 @@
 #include "handle.h"
 
 namespace gnet {
+namespace proto { class TCP; }
 
-class Reactor;
+class Actor;
 class Acceptor : public Handle
 {
 public:
-    Acceptor(Reactor* reactor, const std::string& host, int16_t port);
+    Acceptor(Actor* actor, const proto::TCP& addr);
     virtual ~Acceptor();
 
     virtual void OnAccept(int fd);
@@ -20,6 +21,9 @@ public:
 private:
     void proc_in();
     void proc_out();
+
+private:
+    Actor* actor_;
 };
 
 }

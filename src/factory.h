@@ -5,16 +5,6 @@
 
 namespace gnet {
 
-/*
-class Master : public Actor
-{
-};
-
-class Client : public Actor
-{
-};
-*/
-
 class Factory
 {
 public:

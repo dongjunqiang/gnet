@@ -1,19 +1,22 @@
 #include <netinet/in.h>
 #include <functional>
 
+#include "proto/gnet.pb.h"
 #include "coroutine.h"
 #include "reactor.h"
 #include "connector.h"
-#include "acceptor.h"
 #include "sock.h"
 #include "log.h"
+#include "actor.h"
+#include "acceptor.h"
 
 using namespace gnet;
 
 #define ACCEPTOR_STACK (32 << 10)
 
-Acceptor::Acceptor(Reactor* reactor, const std::string& host, int16_t port)
-        : Handle(reactor)
+Acceptor::Acceptor(Actor* actor, const proto::TCP& tcp)
+        : Handle(actor->get_reactor())
+        , actor_(actor)
 {
     fd_ = SOCK::tcp();
     assert(fd_ > 0);
@@ -23,7 +26,7 @@ Acceptor::Acceptor(Reactor* reactor, const std::string& host, int16_t port)
 
     struct sockaddr_in addr;
     int ret;
-    ret = SOCK::addr_aton(host, port, &addr);
+    ret = SOCK::addr_aton(tcp.host(), tcp.port(), &addr);
     assert(ret == 0);
 
     ret = SOCK::listen(fd_, (struct sockaddr*)&addr);
@@ -53,7 +56,7 @@ void Acceptor::proc_out()
 
 void Acceptor::OnAccept(int fd)
 {
-    Connector* con = new Connector(reactor_, fd);
+    Connector* con = new Connector(actor_, fd);
     debug("connector %d start.", fd);
     con->Start();
 }

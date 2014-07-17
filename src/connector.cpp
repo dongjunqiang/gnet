@@ -128,7 +128,6 @@ int Connector::OnRead(const char* buffer, int len)
             break;
 
         actor_->recv_pkg(this, pkg);
-        // TODO:
         delete pkg;
 
         len -= nread;

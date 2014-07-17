@@ -32,11 +32,9 @@ int Actor::send_pkg(Connector* con, proto::PKG& pkg)
     return con->Send((const char*)buf, len);
 }
 
-void Actor::recv_pkg(Connector* con, proto::PKG* pkg)
+void Actor::recv_pkg(Connector* con, const proto::PKG* pkg)
 {
     assert(pkg && con);
-    recv_pkg_ = pkg;
-    recv_con_ = con;
     gdebug(gnet_, "recv pkg: \n%s", pkg->DebugString().c_str());
 }
 

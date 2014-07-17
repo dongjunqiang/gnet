@@ -24,6 +24,8 @@ private:
     bool is_gw_;
     Connector* parent_con_;
 
+    // gw address
+    proto::TCP gw_addr_;
     // gw acceptor
     Acceptor* gw_acc_;
     // gw link with other gws

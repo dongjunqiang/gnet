@@ -29,9 +29,18 @@ Client::Client(GNet* gnet, const std::string& name, const proto::TCP& parent, bo
     parent_con_->Start();
 
     // add acceptor to epoll
-    if (is_gw_) {
-
+    if (!is_gw_) {
+        gw_addr_ = parent;
+    } else {
+        // TODO:
+        gw_addr_.set_host("localhost");
+        gw_addr_.set_port(9000);
+        gw_acc_ = new Acceptor(gnet_, this, gw_addr_); 
+        gw_acc_->Start();
     }
+
+    // register
+    // TODO
 }
 
 Client::~Client()

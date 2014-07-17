@@ -5,13 +5,13 @@ namespace gnet {
 
 #define STACK_SIZE (1 << 20)
 
-class Reactor;
+class GNet;
 class Coroutine;
 
 class Handle
 {
 public:
-    Handle(Reactor* reactor);
+    Handle(GNet* gnet);
     virtual ~Handle();
 
     Coroutine* get_in() const { return in_; }
@@ -24,7 +24,7 @@ protected:
     virtual void proc_out() = 0;
 
 protected:
-    Reactor* reactor_;
+    GNet* gnet_;
     int fd_;
     Coroutine* in_;
     Coroutine* out_;

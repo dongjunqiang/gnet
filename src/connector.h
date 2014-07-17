@@ -12,7 +12,7 @@ class Buffer;
 class Connector : public Handle
 {
 public:
-    Connector(Actor* actor, int fd);
+    Connector(GNet* gnet, Actor* actor, int fd);
     virtual ~Connector();
 
     // return 0, success

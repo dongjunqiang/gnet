@@ -1,34 +1,29 @@
 #include <sys/mman.h>
-#include "src/coroutine.h"
+
+#include "gnet.h"
+#include "coroutine.h"
 
 using namespace gnet;
 
-Coroutine::Coroutine(FUNC func, size_t stacksz)
+Coroutine::Coroutine(GNet* gnet, FUNC func, size_t stacksz)
          : status_(S_INIT)
          , func_(func)
          , stack_(NULL)
          , stacksz_(stacksz)
+         , gnet_(gnet)
 {
     stack_ = (SP)valloc(stacksz + RESERVED_SIZE);
     assert(stack_);
-
     int ret = mprotect(stack_, RESERVED_SIZE, PROT_NONE);
     assert(ret == 0);
-
     stack_ = stack_ + RESERVED_SIZE;
-
-    static int idx = 0;
-    id_ = ++ idx;
-
-    Scheduler::Instance()->AddCoroutine(this);
 }
 
 Coroutine::~Coroutine()
 {
-    Scheduler::Instance()->RemoveCoroutine(this);
-
     stack_ -= RESERVED_SIZE;
     free(stack_);
+    gnet_->current_ = NULL;
 }
 
 void Coroutine::init_context()
@@ -36,13 +31,11 @@ void Coroutine::init_context()
     getcontext(&ctx_);
     ctx_.uc_stack.ss_sp = stack_;
     ctx_.uc_stack.ss_size = stacksz_;
+    ctx_.uc_link = &gnet_->main_;
 
-    ucontext_t* main = Scheduler::Instance()->GetMain();
-    ctx_.uc_link = main;
-    status_ = S_AWAKE;
-
-    makecontext(&ctx_, (void (*)(void))Coroutine::routine, 0);
-    swapcontext(main, &ctx_);
+    uintptr_t ptr = (uintptr_t)gnet_;
+    makecontext(&ctx_, *(void (*)(void))Coroutine::main, (uint32_t)ptr,
+        (uint32_t)(ptr >> 32));
 }
 
 void Coroutine::Resume()
@@ -51,39 +44,30 @@ void Coroutine::Resume()
     {
         case S_INIT:
             init_context();
-            break;
         case S_SLEEP:
-            Scheduler::Instance()->SetCurrent(this);
+            gnet_->current_ = this;
             status_ = S_AWAKE;
-            swapcontext(Scheduler::Instance()->GetMain(), &ctx_);
+            swapcontext(&gnet_->main_, &ctx_);
             break;
         default:
             assert(0);
     }
 }
 
-void Coroutine::routine()
+void Coroutine::Yield()
 {
-    Scheduler* sched = Scheduler::Instance();
-    Coroutine* cr = sched->GetCurrent();
-    if (cr) {
-        cr->func_();
-        delete cr;
-    }
+    status_ = S_SLEEP;
+    swapcontext(&ctx_, &gnet_->main_);
+    gnet_->current_ = NULL;
 }
 
-////////////////////////////////////////////////////////////////
-
-Scheduler::Scheduler()
-         : current_(NULL)
+void Coroutine::main(uint32_t hi32, uint32_t low32)
 {
-}
-
-Scheduler::~Scheduler()
-{
-    for (ITER_T it = units_.begin(); it != units_.end(); ++ it) {
-        delete it->second;
-        it->second = NULL;
+    uintptr_t ptr = (uintptr_t)low32 | ((uintptr_t)hi32 << 32);
+    GNet* gnet = (GNet*)ptr;
+    if (gnet && gnet->current_) {
+        gnet->current_->func_();
+        delete gnet->current_;
     }
 }
 

@@ -19,7 +19,7 @@ bool DR::ntoh(const char* buffer, int& len, proto::PKG& pkg)
 
     const void* data = buffer + nhead;
     if (!pkg.ParseFromArray(data, nbody)) {
-        error("%s", pkg.InitializationErrorString().c_str());
+        gerror("%s", pkg.InitializationErrorString().c_str());
         assert(0);
     }
 

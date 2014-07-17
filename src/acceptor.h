@@ -13,7 +13,7 @@ class Actor;
 class Acceptor : public Handle
 {
 public:
-    Acceptor(Actor* actor, const proto::TCP& addr);
+    Acceptor(GNet* gnet, Actor* actor, const proto::TCP& addr);
     virtual ~Acceptor();
 
     virtual void OnAccept(int fd);

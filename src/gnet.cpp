@@ -5,19 +5,21 @@
 #include "sock.h"
 #include "log.h"
 #include "dr.h"
-#include "factory.h"
+#include "client.h"
+#include "coroutine.h"
+#include "gnet.h"
 
 using namespace gnet;
 
-Actor* Factory::GenClient(const std::string& name, const std::string& host, int16_t port)
+Client* GNet::CreateClient(const std::string& name)
 {
     int fd = SOCK::tcp();
     assert(fd > 0);
 
     // connect to master
-    int ret = SOCK::connect(fd, host, port, 10);
+    int ret = SOCK::connect(fd, master_host_, master_port_, 10);
     if (ret < 0) {
-        error("connect to master[%s:%d] fail: %d", host.c_str(), port, ret);
+        gerror("connect to master[%s:%d]: %d", master_host_.c_str(), master_port_, ret);
         return NULL;
     }
 
@@ -30,7 +32,7 @@ Actor* Factory::GenClient(const std::string& name, const std::string& host, int1
         if (ret < 0 && (EAGAIN == errno || EINTR == errno))
             usleep(10);
         else if (ret <= 0) {
-            error("connection to master closed: %d", ret);
+            gerror("connection to master closed: %d", ret);
             return NULL;
         } else {
             nbytes += ret;
@@ -44,24 +46,29 @@ Actor* Factory::GenClient(const std::string& name, const std::string& host, int1
             }
             assert(pkg.head().cmd() == proto::CMD_GW);
 
-            // work as normal-client 
+            // close socket
+            close(fd);
+
+            // work as normal-client
             if (pkg.gw().has_addr()) {
-                // TODO:
+                Client* client = new Client(this, name, pkg.gw().addr());
+                return client;
             }
             // work as gw-client
             else {
-                // TODO:
+                proto::TCP master;
+                master.set_host(master_host_);
+                master.set_port(master_port_);
+                Client* client = new Client(this, name, master, true);
+                return client;
             }
             break;
         }
     }
-
     return NULL;
 }
 
-Actor* Factory::GenMaster(const std::string& name, const std::string& host, int16_t port)
+Master* GNet::CreateMaster(const std::string& name)
 {
-    // TODO:
     return NULL;
 }
-

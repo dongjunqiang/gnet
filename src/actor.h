@@ -4,43 +4,27 @@
 #include <string>
 
 namespace gnet {
-namespace proto {
-    class TCP;
-    class PKG;
-}
-class Reactor;
+
+namespace proto { class PKG; }
 class Connector;
-class Acceptor;
-class Coroutine;
-class Actor;
-class Router;
+class GNet;
 
 class Actor
 {
 public:
-    Actor(const std::string& name);
+    Actor(GNet* gnet, const std::string& name);
     virtual ~Actor();
-
-    void Resume();
-
-    Reactor* get_reactor() const { return reactor_; }
 
     void recv_pkg(Connector* con, proto::PKG* pkg);
     int send_pkg(Connector* con, proto::PKG& pkg);
 
 protected:
-    virtual void main();
-
-protected:
     std::string name_;
-    Coroutine* main_;
-    Reactor* reactor_;
+    GNet* gnet_;
 
     // cache
     proto::PKG* recv_pkg_;
     Connector* recv_con_;
-
-    Router* router_;
 };
 
 }

@@ -1,6 +1,5 @@
 #include <assert.h>
 
-#include "proto/gnet.pb.h"
 #include "router.h"
 
 using namespace gnet;
@@ -9,7 +8,7 @@ void Router::Init(const proto::ROUTE& route, const std::string& name)
 {
     route_ = route;
     assert(route_.has_root());
-    load(&route_.root()); 
+    load(&route_.root());
 }
 
 void Router::load(const proto::NODE* node)

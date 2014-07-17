@@ -35,8 +35,8 @@ private:
         Log::Instance()->DoLog(level, &now, fmt, ##__VA_ARGS__); \
     } while (0)
 
-#define debug(fmt, ...) log(DEBUG, fmt, ##__VA_ARGS__)
-#define error(fmt, ...) log(ERROR, fmt, ##__VA_ARGS__)
+#define gdebug(fmt, ...) log(DEBUG, fmt, ##__VA_ARGS__)
+#define gerror(fmt, ...) log(ERROR, fmt, ##__VA_ARGS__)
 
 }
 

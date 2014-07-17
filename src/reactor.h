@@ -30,15 +30,11 @@ public:
     int Mod(Handle* handle, int fd, int events);
     int Del(int fd);
 
-    void Resume();
-
-private:
-    void main();
+    int Dispatch(int ms = 10);
 
 private:
     int fd_;
     struct epoll_event events_[EPOLL_SIZE];
-    Coroutine* main_;
 };
 
 }

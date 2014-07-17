@@ -4,11 +4,9 @@
 #include <map>
 #include <string>
 
+#include "proto/gnet.pb.h"
+
 namespace gnet {
-namespace proto {
-    class NODE;
-    class ROUTE;
-}
 
 // 路由表
 class Router

@@ -14,8 +14,8 @@ using namespace gnet;
 
 #define ACCEPTOR_STACK (32 << 10)
 
-Acceptor::Acceptor(Actor* actor, const proto::TCP& tcp)
-        : Handle(actor->get_reactor())
+Acceptor::Acceptor(GNet* gnet, Actor* actor, const proto::TCP& tcp)
+        : Handle(gnet)
         , actor_(actor)
 {
     fd_ = SOCK::tcp();
@@ -46,7 +46,7 @@ void Acceptor::proc_in()
         if (fd > 0) {
             OnAccept(fd);
         }
-        reactor_->Resume();
+        in_->Yield();
     }
 }
 
@@ -56,8 +56,8 @@ void Acceptor::proc_out()
 
 void Acceptor::OnAccept(int fd)
 {
-    Connector* con = new Connector(actor_, fd);
-    debug("connector %d start.", fd);
+    Connector* con = new Connector(gnet_, actor_, fd);
+    gdebug("connector %d start.", fd);
     con->Start();
 }
 

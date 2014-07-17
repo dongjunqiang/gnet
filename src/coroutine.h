@@ -8,12 +8,9 @@
 #include <ucontext.h>
 #include <unistd.h>
 
-#include "src/singleton.h"
-
 namespace gnet {
 
-class Scheduler;
-
+class GNet;
 class Coroutine
 {
 public:
@@ -29,62 +26,25 @@ public:
 
     #define RESERVED_SIZE getpagesize()
 
-    Coroutine(FUNC func, size_t stacksz = (32 << 10));
+    Coroutine(GNet* gnet, FUNC func, size_t stacksz = (32 << 10));
     virtual ~Coroutine();
 
-    int get_id() const { return id_; }
     int get_status() const { return status_; }
 
     void Resume();
+    void Yield();
 
 private:
     void init_context();
-
-    static void routine();
+    static void main(uint32_t hi32, uint32_t low32);
 
 private:
-    int id_;
     int status_;
     FUNC func_;
     SP stack_;
     size_t stacksz_;
     ucontext_t ctx_;
-};
-
-class Scheduler : public Singleton<Scheduler>
-{
-    typedef ::std::map<int, Coroutine*> MAP_T;
-    typedef MAP_T::iterator ITER_T;
-    typedef MAP_T::const_iterator CITER_T;
-
-    friend class Coroutine;
-
-protected:
-    Scheduler();
-    ~Scheduler();
-
-private:
-    void AddCoroutine(Coroutine* cr) {
-        if (cr) {
-            units_.insert(std::make_pair(cr->get_id(), cr));
-        }
-    }
-
-    void RemoveCoroutine(Coroutine* cr) {
-        if (cr) {
-            units_.erase(cr->get_id());
-        }
-    }
-
-    Coroutine* GetCurrent() const { return current_; }
-    void SetCurrent(Coroutine* cr) { current_ = cr; }
-
-    ucontext_t* GetMain() { return &main_; }
-
-private:
-    ucontext_t main_;
-    Coroutine* current_;
-    MAP_T units_;
+    GNet* gnet_;
 };
 
 }

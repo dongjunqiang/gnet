@@ -14,20 +14,11 @@ Reactor::Reactor()
     fd_ = epoll_create(EPOLL_SIZE);
     assert(fd_ > 0);
     memset(events_, 0, sizeof(events_));
-
-    main_ = new Coroutine(std::bind(&Reactor::main, this));
-    assert(main_);
 }
 
 Reactor::~Reactor()
 {
     close(fd_);
-    delete main_;
-}
-
-void Reactor::Resume()
-{
-    main_->Resume();
 }
 
 int Reactor::Add(Handle* handle, int fd, int events)
@@ -53,29 +44,25 @@ int Reactor::Del(int fd)
     return epoll_ctl(fd_, EPOLL_CTL_DEL, fd, &event);
 }
 
-void Reactor::main()
+int Reactor::Dispatch(int ms)
 {
-    while (true) {
-        int res = epoll_wait(fd_, events_, EPOLL_SIZE, 10);
-        if (res < 0) {
-            if (EINTR != errno) {
-                assert(0);
+    int res = epoll_wait(fd_, events_, EPOLL_SIZE, ms);
+    if (res < 0) {
+        if (EINTR != errno) {
+            return errno;
+        }
+    } else if (res > 0) {
+        for (int i = 0; i < res; ++ i) {
+            Handle* handle = static_cast<Handle*>(events_[i].data.ptr);
+            if ((EPOLLIN & events_[i].events) || (EPOLLHUP & events_[i].events)) {
+                handle->get_in()->Resume();
             }
-        } else if (0 == res) {
-            usleep(10);
-            // TODO: swap out
-        } else {
-            for (int i = 0; i < res; ++ i) {
-                Handle* handle = static_cast<Handle*>(events_[i].data.ptr);
-                if ((EPOLLIN & events_[i].events) || (EPOLLHUP & events_[i].events)) {
-                    handle->get_in()->Resume();
-                }
-                if (EPOLLOUT & events_[i].events) {
-                    handle->get_out()->Resume();
-                }
+            if (EPOLLOUT & events_[i].events) {
+                handle->get_out()->Resume();
             }
         }
     }
+    return 0;
 }
 
 

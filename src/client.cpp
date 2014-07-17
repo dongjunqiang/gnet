@@ -20,7 +20,7 @@ Client::Client(GNet* gnet, const std::string& name, const proto::TCP& parent, bo
     assert(fd > 0);
     int ret = SOCK::connect(fd, parent.host(), parent.port());
     if (ret < 0) {
-        gerror("connect parent[%s:%d]: %d", parent.host().c_str(), parent.port(), ret);
+        gerror(gnet_, "connect parent[%s:%d]: %d", parent.host().c_str(), parent.port(), ret);
         assert(0);
     }
 

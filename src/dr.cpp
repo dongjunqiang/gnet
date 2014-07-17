@@ -1,7 +1,6 @@
 #include <google/protobuf/stubs/common.h>
 
 #include "proto/gnet.pb.h"
-#include "log.h"
 #include "dr.h"
 
 using namespace gnet;
@@ -19,7 +18,6 @@ bool DR::ntoh(const char* buffer, int& len, proto::PKG& pkg)
 
     const void* data = buffer + nhead;
     if (!pkg.ParseFromArray(data, nbody)) {
-        gerror("%s", pkg.InitializationErrorString().c_str());
         assert(0);
     }
 

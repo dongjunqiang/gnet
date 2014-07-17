@@ -33,5 +33,5 @@ void Handle::Start()
     assert(fd_ > 0);
     int ret = gnet_->reactor_->AddIn(this, fd_);
     assert(ret == 0);
-    gdebug("handle %d start", fd_);
+    gdebug(gnet_, "handle %d start", fd_);
 }

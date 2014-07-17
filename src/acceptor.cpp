@@ -6,7 +6,7 @@
 #include "reactor.h"
 #include "connector.h"
 #include "sock.h"
-#include "log.h"
+#include "gnet.h"
 #include "actor.h"
 #include "acceptor.h"
 
@@ -57,7 +57,7 @@ void Acceptor::proc_out()
 void Acceptor::OnAccept(int fd)
 {
     Connector* con = new Connector(gnet_, actor_, fd);
-    gdebug("connector %d start.", fd);
+    gdebug(gnet_, "connector %d start.", fd);
     con->Start();
 }
 

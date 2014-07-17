@@ -40,7 +40,7 @@ Connector::~Connector()
 int Connector::Send(const char* buffer, int len)
 {
     if (wbuf_->wlen() < len) {
-        gerror("connector %d write buffer full", fd_);
+        gerror(gnet_, "connector %d write buffer full", fd_);
         return -1;
     }
     wbuf_->Write(len, buffer);
@@ -53,7 +53,7 @@ void Connector::proc_in()
     int res = -1;
     while (true) {
         if (rbuf_->wlen() <= 0) {
-            gerror("connector %d read buffer full", fd_);
+            gerror(gnet_, "connector %d read buffer full", fd_);
             in_->Yield();
             continue;
         }
@@ -64,7 +64,7 @@ void Connector::proc_in()
                 in_->Yield();
                 continue;
             }
-            gerror("connector %d read get %d", fd_, errno);
+            gerror(gnet_, "connector %d read get %d", fd_, errno);
             OnDisconnect();
             delete this;
             return;
@@ -97,7 +97,7 @@ void Connector::proc_out()
         res = write(fd_, wbuf_->rbuf(), wbuf_->rlen());
         if (res < 0) {
             if (EAGAIN != errno && EINTR != errno) {
-                gerror("connector %d write get %d", fd_, errno);
+                gerror(gnet_, "connector %d write get %d", fd_, errno);
                 OnDisconnect();
                 delete this;
                 return;
@@ -139,6 +139,6 @@ int Connector::OnRead(const char* buffer, int len)
 
 void Connector::OnDisconnect()
 {
-    gdebug("connector[%d] disconnect", fd_);
+    gdebug(gnet_, "connector[%d] disconnect", fd_);
 }
 

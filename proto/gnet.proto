@@ -45,8 +45,7 @@ message ROUTE
 //////////////////////////////////////////
 
 enum Cmd {
-    CMD_GW_REQ = 1;
-    CMD_GW_RSP = 2;
+    CMD_GW = 1;
     CMD_N2G_REQ = 3;
     CMD_G2N_RSP = 4;
     CMD_G2M_REQ = 5;
@@ -61,10 +60,7 @@ message Head {
     optional uint32 sequence = 3;
 }
 
-message GWReq
-{
-}
-message GWRsp
+message GW
 {
     optional TCP addr = 1;      // empty means no GW on this machine
 }
@@ -106,8 +102,7 @@ message PKG
 {
     required Head head = 1;
 
-    optional GWReq gw_req = 2;
-    optional GWRsp gw_rsp = 3;
+    optional GW gw = 2;
 
     optional N2GReq n2g_req = 4;
     optional G2NRsp g2n_rsp = 5;

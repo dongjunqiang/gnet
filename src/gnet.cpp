@@ -3,7 +3,6 @@
 
 #include "proto/gnet.pb.h"
 #include "sock.h"
-#include "log.h"
 #include "dr.h"
 #include "client.h"
 #include "coroutine.h"
@@ -19,7 +18,7 @@ Client* GNet::CreateClient(const std::string& name)
     // connect to master
     int ret = SOCK::connect(fd, master_host_, master_port_, 10);
     if (ret < 0) {
-        gerror("connect to master[%s:%d]: %d", master_host_.c_str(), master_port_, ret);
+        gerror(this, "connect to master[%s:%d]: %d", master_host_.c_str(), master_port_, ret);
         return NULL;
     }
 
@@ -32,7 +31,7 @@ Client* GNet::CreateClient(const std::string& name)
         if (ret < 0 && (EAGAIN == errno || EINTR == errno))
             usleep(10);
         else if (ret <= 0) {
-            gerror("connection to master closed: %d", ret);
+            gerror(this, "connection to master closed: %d", ret);
             return NULL;
         } else {
             nbytes += ret;

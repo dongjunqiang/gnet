@@ -7,6 +7,7 @@
 
 #include "reactor.h"
 #include "router.h"
+#include "log.h"
 
 namespace gnet {
 
@@ -22,6 +23,7 @@ struct GNet
 
         reactor_ = new Reactor;
         router_ = new Router;
+        log_ = new Log;
         current_ = NULL;
     }
 
@@ -29,6 +31,7 @@ struct GNet
     {
         delete router_;
         delete reactor_;
+        delete log_;
     }
 
     Client* CreateClient(const std::string& name);
@@ -36,12 +39,16 @@ struct GNet
 
     Reactor* reactor_;
     Router* router_;
+    Log* log_;
     Coroutine* current_;
     ucontext_t main_;
 
     std::string master_host_;
     int16_t master_port_;
 };
+
+#define gdebug(gnet, fmt, ...) log((gnet)->log_, DEBUG, fmt, ##__VA_ARGS__)
+#define gerror(gnet, fmt, ...) log((gnet)->log_, ERROR, fmt, ##__VA_ARGS__)
 
 }
 
